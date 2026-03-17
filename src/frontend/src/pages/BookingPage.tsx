@@ -27,6 +27,8 @@ import { toast } from "sonner";
 import LocationPicker from "../components/LocationPicker";
 import { useCreateBooking, useDriver } from "../hooks/useQueries";
 
+const GREEN = "oklch(0.50 0.18 145)";
+
 function haversineKm(
   lat1: number,
   lon1: number,
@@ -168,7 +170,7 @@ export default function BookingPage() {
               ) : (
                 <div
                   className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-display font-bold text-white"
-                  style={{ background: "oklch(0.26 0.07 255)" }}
+                  style={{ background: GREEN }}
                 >
                   {driver.name
                     .split(" ")
@@ -191,7 +193,10 @@ export default function BookingPage() {
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-display font-bold text-primary">
+                <p
+                  className="text-2xl font-display font-bold"
+                  style={{ color: GREEN }}
+                >
                   ₹{Number(driver.pricePerHour)}
                 </p>
                 <p className="text-sm text-muted-foreground">per hour</p>
@@ -244,7 +249,6 @@ export default function BookingPage() {
                 </div>
               </div>
 
-              {/* Pickup Location with Map */}
               <LocationPicker
                 label="Pickup Location"
                 value={form.pickupAddress}
@@ -259,7 +263,6 @@ export default function BookingPage() {
                 ocidSearch="booking.pickup_search_input"
               />
 
-              {/* Drop-off Location with Map */}
               <LocationPicker
                 label="Drop-off Location"
                 value={form.destination}
@@ -273,7 +276,6 @@ export default function BookingPage() {
                 ocidSearch="booking.dropoff_search_input"
               />
 
-              {/* Distance estimate */}
               {estimatedDistance && (
                 <motion.div
                   initial={{ opacity: 0, y: -8 }}
@@ -346,7 +348,10 @@ export default function BookingPage() {
               {/* Price Summary */}
               <div
                 className="rounded-xl p-4 space-y-2"
-                style={{ background: "oklch(0.94 0.01 255)" }}
+                style={{
+                  background: "oklch(0.95 0.03 145)",
+                  border: "1px solid oklch(0.88 0.05 145)",
+                }}
               >
                 <div className="flex items-center justify-between">
                   <div>
@@ -366,7 +371,8 @@ export default function BookingPage() {
                   <Button
                     type="submit"
                     size="lg"
-                    className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
+                    className="font-semibold text-white"
+                    style={{ background: GREEN }}
                     disabled={createBooking.isPending}
                     data-ocid="booking.submit_button"
                   >

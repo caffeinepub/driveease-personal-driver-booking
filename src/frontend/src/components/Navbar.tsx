@@ -3,16 +3,18 @@ import { Link } from "@tanstack/react-router";
 import { Car, Menu, X } from "lucide-react";
 import { useState } from "react";
 
+const GREEN = "oklch(0.50 0.18 145)";
+
 function PulseDot() {
   return (
     <span className="relative flex h-2 w-2">
       <span
         className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
-        style={{ background: "oklch(0.72 0.22 145)" }}
+        style={{ background: GREEN }}
       />
       <span
         className="relative inline-flex rounded-full h-2 w-2"
-        style={{ background: "oklch(0.72 0.22 145)" }}
+        style={{ background: GREEN }}
       />
     </span>
   );
@@ -23,23 +25,21 @@ export default function Navbar() {
 
   return (
     <header
-      className="sticky top-0 z-50 border-b"
-      style={{
-        background: "oklch(0.06 0 0)",
-        borderColor: "oklch(0.14 0 0)",
-      }}
+      className="sticky top-0 z-50 border-b bg-white"
+      style={{ borderColor: "oklch(0.88 0 0)" }}
     >
       <div className="container mx-auto px-4 flex items-center justify-between h-16">
         <Link
           to="/"
-          className="flex items-center gap-2 font-display font-bold text-xl text-foreground"
+          className="flex items-center gap-2 font-display font-bold text-xl"
+          style={{ color: "oklch(0.12 0 0)" }}
           data-ocid="nav.home.link"
         >
           <div
             className="w-8 h-8 rounded-lg flex items-center justify-center"
-            style={{ background: "oklch(0.72 0.22 145)" }}
+            style={{ background: GREEN }}
           >
-            <Car className="w-4 h-4" style={{ color: "oklch(0.06 0 0)" }} />
+            <Car className="w-4 h-4 text-white" />
           </div>
           DriveEase
         </Link>
@@ -81,8 +81,8 @@ export default function Navbar() {
               variant="outline"
               className="font-semibold"
               style={{
-                borderColor: "oklch(0.72 0.22 145)",
-                color: "oklch(0.72 0.22 145)",
+                borderColor: GREEN,
+                color: GREEN,
                 background: "transparent",
               }}
             >
@@ -92,11 +92,8 @@ export default function Navbar() {
           <Link to="/drivers">
             <Button
               size="sm"
-              className="font-semibold rounded-full px-5"
-              style={{
-                background: "oklch(0.72 0.22 145)",
-                color: "oklch(0.06 0 0)",
-              }}
+              className="font-semibold rounded-full px-5 text-white"
+              style={{ background: GREEN }}
               data-ocid="nav.book.primary_button"
             >
               Book a Driver
@@ -118,11 +115,8 @@ export default function Navbar() {
       {/* Mobile Nav */}
       {open && (
         <div
-          className="md:hidden border-t px-4 py-4 flex flex-col gap-4"
-          style={{
-            background: "oklch(0.08 0 0)",
-            borderColor: "oklch(0.14 0 0)",
-          }}
+          className="md:hidden border-t px-4 py-4 flex flex-col gap-4 bg-white"
+          style={{ borderColor: "oklch(0.88 0 0)" }}
         >
           <Link
             to="/"
@@ -164,11 +158,8 @@ export default function Navbar() {
           >
             <Button
               size="sm"
-              className="w-full font-semibold rounded-full"
-              style={{
-                background: "oklch(0.72 0.22 145)",
-                color: "oklch(0.06 0 0)",
-              }}
+              className="w-full font-semibold rounded-full text-white"
+              style={{ background: GREEN }}
             >
               Register as Driver
             </Button>

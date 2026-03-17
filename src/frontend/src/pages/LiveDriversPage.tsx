@@ -1,7 +1,14 @@
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Car, Clock, Gauge, MapPin, Navigation } from "lucide-react";
 import { motion } from "motion/react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 interface LiveDriver {
   id: number;
@@ -378,7 +385,7 @@ function LiveDriverCard({
       transition={{ duration: 0.4, delay: index * 0.05 }}
       className="rounded-xl border overflow-hidden"
       style={{
-        background: "oklch(0.14 0.04 255)",
+        background: "oklch(0.94 0 0)",
         borderColor: "oklch(0.22 0.06 255)",
         boxShadow: "0 0 20px oklch(0.65 0.18 255 / 0.06)",
       }}
@@ -387,14 +394,14 @@ function LiveDriverCard({
       {/* Header */}
       <div
         className="px-4 py-3 flex items-center justify-between"
-        style={{ borderBottom: "1px solid oklch(0.20 0.04 255)" }}
+        style={{ borderBottom: "1px solid oklch(0.88 0 0)" }}
       >
         <div className="flex items-center gap-3">
           <div
             className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm"
             style={{
               background:
-                "linear-gradient(135deg, oklch(0.25 0.10 260), oklch(0.20 0.07 255))",
+                "linear-gradient(135deg, oklch(0.50 0.18 145), oklch(0.42 0.16 145))",
               color: "oklch(0.70 0.18 255)",
               border: "1px solid oklch(0.30 0.10 255 / 0.5)",
             }}
@@ -416,7 +423,7 @@ function LiveDriverCard({
           <span
             className="text-xs font-semibold px-2 py-0.5 rounded-full"
             style={{
-              background: "oklch(0.18 0.06 145 / 0.8)",
+              background: "oklch(0.50 0.18 145)",
               color: "oklch(0.70 0.20 145)",
               border: "1px solid oklch(0.35 0.12 145 / 0.4)",
             }}
@@ -439,7 +446,7 @@ function LiveDriverCard({
         <div className="grid grid-cols-3 gap-2">
           <div
             className="rounded-lg p-2 text-center"
-            style={{ background: "oklch(0.12 0.03 255)" }}
+            style={{ background: "oklch(1.0 0 0)" }}
           >
             <Gauge
               className="w-4 h-4 mx-auto mb-1"
@@ -455,7 +462,7 @@ function LiveDriverCard({
           </div>
           <div
             className="rounded-lg p-2 text-center"
-            style={{ background: "oklch(0.12 0.03 255)" }}
+            style={{ background: "oklch(1.0 0 0)" }}
           >
             <Clock
               className="w-4 h-4 mx-auto mb-1"
@@ -471,7 +478,7 @@ function LiveDriverCard({
           </div>
           <div
             className="rounded-lg p-2 text-center"
-            style={{ background: "oklch(0.12 0.03 255)" }}
+            style={{ background: "oklch(1.0 0 0)" }}
           >
             <Car
               className="w-4 h-4 mx-auto mb-1"
@@ -491,7 +498,7 @@ function LiveDriverCard({
           <Badge
             className="text-xs"
             style={{
-              background: "oklch(0.18 0.06 255 / 0.7)",
+              background: "oklch(0.88 0 0)",
               color: "oklch(0.70 0.18 255)",
               border: "1px solid oklch(0.30 0.10 255 / 0.4)",
             }}
@@ -505,7 +512,7 @@ function LiveDriverCard({
 
         <div
           className="text-xs px-3 py-1.5 rounded-lg flex items-center gap-2"
-          style={{ background: "oklch(0.12 0.03 255)" }}
+          style={{ background: "oklch(1.0 0 0)" }}
         >
           <span className="text-muted-foreground">GPS:</span>
           <span className="font-mono" style={{ color: "oklch(0.55 0.10 255)" }}>
@@ -519,11 +526,37 @@ function LiveDriverCard({
 
 export default function LiveDriversPage() {
   const [tick, setTick] = useState(0);
+  const [stateFilter, setStateFilter] = useState("");
+  const [cityFilter, setCityFilter] = useState("");
 
   useEffect(() => {
     const t = setInterval(() => setTick((p) => p + 1), 1000);
     return () => clearInterval(t);
   }, []);
+
+  const uniqueStates = useMemo(() => {
+    return [...new Set(LIVE_DRIVERS.map((d) => d.state))].sort();
+  }, []);
+
+  const filteredCities = useMemo(() => {
+    const source = stateFilter
+      ? LIVE_DRIVERS.filter((d) => d.state === stateFilter)
+      : LIVE_DRIVERS;
+    return [...new Set(source.map((d) => d.city))].sort();
+  }, [stateFilter]);
+
+  const handleStateChange = (value: string) => {
+    setStateFilter(value);
+    setCityFilter("");
+  };
+
+  const visibleDrivers = useMemo(() => {
+    return LIVE_DRIVERS.filter((d) => {
+      const matchesState = !stateFilter || d.state === stateFilter;
+      const matchesCity = !cityFilter || d.city === cityFilter;
+      return matchesState && matchesCity;
+    });
+  }, [stateFilter, cityFilter]);
 
   const now = new Date();
   const timeStr = now.toLocaleTimeString("en-IN", {
@@ -540,30 +573,83 @@ export default function LiveDriversPage() {
         transition={{ duration: 0.5 }}
       >
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground">
-                Live Drivers on Road
-              </h1>
-              <PulseDot />
+        <div className="flex flex-col gap-4 mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground">
+                  Live Drivers on Road
+                </h1>
+                <PulseDot />
+              </div>
+              <p className="text-muted-foreground">
+                {visibleDrivers.length} driver
+                {visibleDrivers.length !== 1 ? "s" : ""} currently active
+                {stateFilter ? ` in ${stateFilter}` : " across India"}
+              </p>
             </div>
-            <p className="text-muted-foreground">
-              {LIVE_DRIVERS.length} drivers currently active across India
-            </p>
+            <div
+              className="flex items-center gap-2 px-4 py-2 rounded-xl font-mono text-sm self-start sm:self-auto"
+              style={{
+                background: "oklch(0.94 0 0)",
+                border: "1px solid oklch(0.22 0.06 255)",
+                color: "oklch(0.65 0.18 255)",
+              }}
+            >
+              <span className="text-muted-foreground text-xs">IST</span>
+              <span className="font-bold" key={tick}>
+                {timeStr}
+              </span>
+            </div>
           </div>
-          <div
-            className="flex items-center gap-2 px-4 py-2 rounded-xl font-mono text-sm"
-            style={{
-              background: "oklch(0.14 0.04 255)",
-              border: "1px solid oklch(0.22 0.06 255)",
-              color: "oklch(0.65 0.18 255)",
-            }}
-          >
-            <span className="text-muted-foreground text-xs">IST</span>
-            <span className="font-bold" key={tick}>
-              {timeStr}
-            </span>
+
+          {/* Filter Controls */}
+          <div className="flex flex-wrap items-center gap-3">
+            <MapPin className="w-4 h-4 text-muted-foreground" />
+            <Select value={stateFilter} onValueChange={handleStateChange}>
+              <SelectTrigger className="w-44" data-ocid="live.state.select">
+                <SelectValue placeholder="All States" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All States</SelectItem>
+                {uniqueStates.map((state) => (
+                  <SelectItem key={state} value={state}>
+                    {state}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={cityFilter}
+              onValueChange={setCityFilter}
+              disabled={!stateFilter}
+            >
+              <SelectTrigger className="w-40" data-ocid="live.city.select">
+                <SelectValue placeholder="All Cities" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All Cities</SelectItem>
+                {filteredCities.map((city) => (
+                  <SelectItem key={city} value={city}>
+                    {city}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {(stateFilter || cityFilter) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setStateFilter("");
+                  setCityFilter("");
+                }}
+                className="text-sm text-primary underline hover:no-underline"
+              >
+                Clear filters
+              </button>
+            )}
           </div>
         </div>
 
@@ -571,7 +657,7 @@ export default function LiveDriversPage() {
         <div
           className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8 p-4 rounded-xl"
           style={{
-            background: "oklch(0.14 0.04 255)",
+            background: "oklch(0.94 0 0)",
             border: "1px solid oklch(0.22 0.06 255)",
           }}
           data-ocid="live.stats.panel"
@@ -579,12 +665,14 @@ export default function LiveDriversPage() {
           {[
             {
               label: "Drivers Online",
-              value: "20",
+              value: visibleDrivers.length.toString(),
               color: "oklch(0.70 0.20 145)",
             },
             {
               label: "States Covered",
-              value: "18",
+              value: [
+                ...new Set(visibleDrivers.map((d) => d.state)),
+              ].length.toString(),
               color: "oklch(0.65 0.18 255)",
             },
             { label: "Avg Rating", value: "4.7", color: "oklch(0.72 0.16 75)" },
@@ -607,14 +695,36 @@ export default function LiveDriversPage() {
         </div>
 
         {/* Driver Grid */}
-        <div
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
-          data-ocid="live.drivers.list"
-        >
-          {LIVE_DRIVERS.map((driver, i) => (
-            <LiveDriverCard key={driver.id} driver={driver} index={i + 1} />
-          ))}
-        </div>
+        {visibleDrivers.length === 0 ? (
+          <div
+            className="text-center py-24"
+            data-ocid="live.drivers.empty_state"
+          >
+            <MapPin className="w-12 h-12 mx-auto mb-4 text-muted-foreground opacity-40" />
+            <p className="text-muted-foreground text-lg">
+              No live drivers in this region right now.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setStateFilter("");
+                setCityFilter("");
+              }}
+              className="mt-4 text-sm text-primary underline hover:no-underline"
+            >
+              Clear filters
+            </button>
+          </div>
+        ) : (
+          <div
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+            data-ocid="live.drivers.list"
+          >
+            {visibleDrivers.map((driver, i) => (
+              <LiveDriverCard key={driver.id} driver={driver} index={i + 1} />
+            ))}
+          </div>
+        )}
       </motion.div>
     </div>
   );

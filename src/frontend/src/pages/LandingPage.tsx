@@ -15,6 +15,11 @@ import { motion } from "motion/react";
 import DriverCard from "../components/DriverCard";
 import { useAvailableDrivers } from "../hooks/useQueries";
 
+const GREEN = "oklch(0.50 0.18 145)";
+const GREEN_TINT = "oklch(0.97 0.02 145)";
+const GREEN_BORDER = "oklch(0.88 0.05 145)";
+const GREEN_ICON_BG = "oklch(0.95 0.05 145)";
+
 const steps = [
   {
     icon: Car,
@@ -67,13 +72,13 @@ export default function LandingPage() {
     <div>
       {/* Hero */}
       <section
-        className="text-white relative overflow-hidden"
-        style={{ background: "oklch(0.06 0 0)" }}
+        className="relative overflow-hidden"
+        style={{ background: "oklch(0.97 0.03 145)" }}
       >
-        {/* Subtle green accent strip at top */}
+        {/* Green accent strip at top */}
         <div
-          className="absolute top-0 left-0 right-0 h-0.5"
-          style={{ background: "oklch(0.72 0.22 145)" }}
+          className="absolute top-0 left-0 right-0 h-1"
+          style={{ background: GREEN }}
         />
 
         <div className="container mx-auto px-4 py-20 md:py-28 flex flex-col md:flex-row items-center gap-12 relative z-10">
@@ -86,25 +91,20 @@ export default function LandingPage() {
             <div
               className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium"
               style={{
-                background: "oklch(0.72 0.22 145 / 0.12)",
-                color: "oklch(0.72 0.22 145)",
-                border: "1px solid oklch(0.72 0.22 145 / 0.25)",
+                background: "oklch(0.50 0.18 145 / 0.12)",
+                color: GREEN,
+                border: "1px solid oklch(0.50 0.18 145 / 0.25)",
               }}
             >
               <Star className="w-3.5 h-3.5" fill="currentColor" />
               Trusted by 10,000+ customers across India
             </div>
-            <h1 className="font-display text-4xl md:text-6xl font-bold leading-tight text-white">
+            <h1 className="font-display text-4xl md:text-6xl font-bold leading-tight text-foreground">
               Hire a Professional Driver
               <br />
-              <span style={{ color: "oklch(0.72 0.22 145)" }}>
-                Across India
-              </span>
+              <span style={{ color: GREEN }}>Across India</span>
             </h1>
-            <p
-              className="text-lg max-w-md"
-              style={{ color: "oklch(0.65 0 0)" }}
-            >
+            <p className="text-lg max-w-md text-muted-foreground">
               We provide verified drivers from every corner of India. Your car,
               our expert driver — safe, affordable, on-time.
             </p>
@@ -112,11 +112,8 @@ export default function LandingPage() {
               <Link to="/drivers">
                 <Button
                   size="lg"
-                  className="font-semibold text-base px-8 rounded-full"
-                  style={{
-                    background: "oklch(0.72 0.22 145)",
-                    color: "oklch(0.06 0 0)",
-                  }}
+                  className="font-semibold text-base px-8 rounded-full text-white"
+                  style={{ background: GREEN }}
                   data-ocid="hero.primary_button"
                 >
                   Book a Driver Now
@@ -129,9 +126,9 @@ export default function LandingPage() {
                   variant="outline"
                   className="font-semibold text-base px-8 rounded-full"
                   style={{
-                    borderColor: "oklch(0.28 0 0)",
-                    color: "oklch(0.80 0 0)",
-                    background: "transparent",
+                    borderColor: GREEN_BORDER,
+                    color: "oklch(0.20 0 0)",
+                    background: "white",
                   }}
                   data-ocid="hero.secondary_button"
                 >
@@ -154,27 +151,21 @@ export default function LandingPage() {
                 className="relative rounded-2xl w-full max-w-md object-cover"
                 style={{
                   maxHeight: 420,
-                  border: "1px solid oklch(0.18 0 0)",
+                  border: `1px solid ${GREEN_BORDER}`,
                 }}
               />
               <div
-                className="absolute -bottom-4 -left-4 rounded-xl p-4 flex items-center gap-3"
-                style={{
-                  background: "oklch(0.10 0 0)",
-                  border: "1px solid oklch(0.18 0 0)",
-                }}
+                className="absolute -bottom-4 -left-4 rounded-xl p-4 flex items-center gap-3 bg-white"
+                style={{ border: `1px solid ${GREEN_BORDER}` }}
               >
                 <div
                   className="w-10 h-10 rounded-full flex items-center justify-center"
-                  style={{ background: "oklch(0.72 0.22 145)" }}
+                  style={{ background: GREEN }}
                 >
-                  <Shield
-                    className="w-5 h-5"
-                    style={{ color: "oklch(0.06 0 0)" }}
-                  />
+                  <Shield className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <p className="text-xs" style={{ color: "oklch(0.55 0 0)" }}>
+                  <p className="text-xs text-muted-foreground">
                     All drivers are
                   </p>
                   <p className="text-sm font-semibold text-foreground">
@@ -217,21 +208,18 @@ export default function LandingPage() {
               >
                 <div
                   className="text-7xl font-display font-bold mb-4"
-                  style={{ color: "oklch(0.18 0 0)" }}
+                  style={{ color: "oklch(0.92 0.04 145)" }}
                 >
                   {step.step}
                 </div>
                 <div
                   className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
                   style={{
-                    background: "oklch(0.72 0.22 145 / 0.12)",
-                    border: "1px solid oklch(0.72 0.22 145 / 0.25)",
+                    background: GREEN_ICON_BG,
+                    border: `1px solid ${GREEN_BORDER}`,
                   }}
                 >
-                  <step.icon
-                    className="w-7 h-7"
-                    style={{ color: "oklch(0.72 0.22 145)" }}
-                  />
+                  <step.icon className="w-7 h-7" style={{ color: GREEN }} />
                 </div>
                 <h3 className="font-display font-bold text-xl mb-2">
                   {step.title}
@@ -244,7 +232,7 @@ export default function LandingPage() {
       </section>
 
       {/* Why Choose Us */}
-      <section className="py-20" style={{ background: "oklch(0.08 0 0)" }}>
+      <section className="py-20" style={{ background: GREEN_TINT }}>
         <div className="container mx-auto px-4">
           <motion.div
             className="text-center mb-14"
@@ -275,14 +263,11 @@ export default function LandingPage() {
                 <div
                   className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
                   style={{
-                    background: "oklch(0.72 0.22 145 / 0.12)",
-                    border: "1px solid oklch(0.72 0.22 145 / 0.25)",
+                    background: GREEN_ICON_BG,
+                    border: `1px solid ${GREEN_BORDER}`,
                   }}
                 >
-                  <f.icon
-                    className="w-6 h-6"
-                    style={{ color: "oklch(0.72 0.22 145)" }}
-                  />
+                  <f.icon className="w-6 h-6" style={{ color: GREEN }} />
                 </div>
                 <h3 className="font-display font-bold text-lg mb-2 text-foreground">
                   {f.title}
@@ -363,7 +348,7 @@ export default function LandingPage() {
       </section>
 
       {/* Driver CTA */}
-      <section className="py-16" style={{ background: "oklch(0.08 0 0)" }}>
+      <section className="py-16" style={{ background: GREEN_TINT }}>
         <div className="container mx-auto px-4 text-center">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
@@ -374,9 +359,9 @@ export default function LandingPage() {
             <div
               className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium mb-6"
               style={{
-                background: "oklch(0.72 0.22 145 / 0.12)",
-                color: "oklch(0.72 0.22 145)",
-                border: "1px solid oklch(0.72 0.22 145 / 0.25)",
+                background: "oklch(0.50 0.18 145 / 0.12)",
+                color: GREEN,
+                border: "1px solid oklch(0.50 0.18 145 / 0.25)",
               }}
             >
               🚗 Join 5,000+ Registered Drivers
@@ -391,11 +376,8 @@ export default function LandingPage() {
             <Link to="/register-driver">
               <Button
                 size="lg"
-                className="font-semibold text-base px-10 rounded-full"
-                style={{
-                  background: "oklch(0.72 0.22 145)",
-                  color: "oklch(0.06 0 0)",
-                }}
+                className="font-semibold text-base px-10 rounded-full text-white"
+                style={{ background: GREEN }}
                 data-ocid="cta.register.primary_button"
               >
                 Register as Driver — ₹150 only

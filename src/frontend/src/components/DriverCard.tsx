@@ -4,6 +4,8 @@ import { Link } from "@tanstack/react-router";
 import { Clock, Globe, MapPin, Star } from "lucide-react";
 import type { Driver } from "../backend";
 
+const GREEN = "oklch(0.50 0.18 145)";
+
 interface DriverCardProps {
   driver: Driver;
   index: number;
@@ -189,7 +191,10 @@ export default function DriverCard({ driver, index }: DriverCardProps) {
 
   return (
     <div
-      className="uber-card overflow-hidden transition-all duration-300 hover:border-primary/40"
+      className="uber-card overflow-hidden transition-all duration-300 hover:shadow-md"
+      style={{
+        borderColor: driver.available ? "oklch(0.88 0 0)" : "oklch(0.90 0 0)",
+      }}
       data-ocid={`drivers.item.${index}`}
     >
       <div className="relative">
@@ -203,8 +208,8 @@ export default function DriverCard({ driver, index }: DriverCardProps) {
           <div
             className="w-full h-48 flex items-center justify-center text-4xl font-display font-bold"
             style={{
-              background: "oklch(0.12 0 0)",
-              color: "oklch(0.72 0.22 145)",
+              background: "oklch(0.96 0.03 145)",
+              color: GREEN,
             }}
           >
             {initials}
@@ -214,9 +219,9 @@ export default function DriverCard({ driver, index }: DriverCardProps) {
           <Badge
             className="absolute top-3 right-3 border font-semibold"
             style={{
-              background: "oklch(0.72 0.22 145 / 0.15)",
-              color: "oklch(0.72 0.22 145)",
-              borderColor: "oklch(0.72 0.22 145 / 0.4)",
+              background: "oklch(0.50 0.18 145 / 0.12)",
+              color: GREEN,
+              borderColor: "oklch(0.50 0.18 145 / 0.35)",
             }}
           >
             Available
@@ -225,9 +230,9 @@ export default function DriverCard({ driver, index }: DriverCardProps) {
           <Badge
             className="absolute top-3 right-3 border"
             style={{
-              background: "oklch(0.20 0 0 / 0.8)",
-              color: "oklch(0.55 0 0)",
-              borderColor: "oklch(0.25 0 0)",
+              background: "oklch(0.94 0 0 / 0.9)",
+              color: "oklch(0.50 0 0)",
+              borderColor: "oklch(0.85 0 0)",
             }}
           >
             Unavailable
@@ -243,9 +248,9 @@ export default function DriverCard({ driver, index }: DriverCardProps) {
           <div
             className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full"
             style={{
-              background: "oklch(0.14 0 0)",
-              color: "oklch(0.55 0 0)",
-              border: "1px solid oklch(0.18 0 0)",
+              background: "oklch(0.95 0.02 145)",
+              color: "oklch(0.40 0.12 145)",
+              border: "1px solid oklch(0.88 0.04 145)",
             }}
           >
             <MapPin className="w-3 h-3" />
@@ -259,14 +264,9 @@ export default function DriverCard({ driver, index }: DriverCardProps) {
               key={s}
               className="w-4 h-4"
               style={{
-                fill:
-                  s <= Math.round(driver.rating)
-                    ? "oklch(0.72 0.22 145)"
-                    : "transparent",
+                fill: s <= Math.round(driver.rating) ? GREEN : "transparent",
                 color:
-                  s <= Math.round(driver.rating)
-                    ? "oklch(0.72 0.22 145)"
-                    : "oklch(0.28 0 0)",
+                  s <= Math.round(driver.rating) ? GREEN : "oklch(0.80 0 0)",
               }}
             />
           ))}
@@ -294,7 +294,7 @@ export default function DriverCard({ driver, index }: DriverCardProps) {
           <div>
             <span
               className="text-2xl font-display font-bold"
-              style={{ color: "oklch(0.72 0.22 145)" }}
+              style={{ color: GREEN }}
             >
               ₹{Number(driver.pricePerHour)}
             </span>
@@ -307,11 +307,8 @@ export default function DriverCard({ driver, index }: DriverCardProps) {
             >
               <Button
                 size="sm"
-                className="font-semibold rounded-full px-5"
-                style={{
-                  background: "oklch(0.72 0.22 145)",
-                  color: "oklch(0.06 0 0)",
-                }}
+                className="font-semibold rounded-full px-5 text-white"
+                style={{ background: GREEN }}
                 data-ocid={`drivers.book_button.${index}`}
               >
                 Book Now

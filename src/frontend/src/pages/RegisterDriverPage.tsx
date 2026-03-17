@@ -141,9 +141,7 @@ function FileUploadBox({
           borderColor: file
             ? "oklch(0.65 0.18 255 / 0.6)"
             : "oklch(0.28 0.04 255)",
-          background: file
-            ? "oklch(0.65 0.18 255 / 0.05)"
-            : "oklch(0.12 0.02 255)",
+          background: file ? "oklch(0.65 0.18 255 / 0.05)" : "oklch(1.0 0 0)",
         }}
         onClick={() => ref.current?.click()}
         data-ocid={ocid}
@@ -266,7 +264,7 @@ export default function RegisterDriverPage() {
   };
 
   const cardStyle = {
-    background: "oklch(0.14 0.02 255)",
+    background: "oklch(0.94 0 0)",
     border: "1px solid oklch(0.22 0.03 255)",
     boxShadow:
       "0 0 0 1px oklch(0.22 0.03 255), 0 4px 24px oklch(0.65 0.18 255 / 0.06)",
@@ -275,7 +273,7 @@ export default function RegisterDriverPage() {
   return (
     <div
       className="min-h-screen py-12 px-4"
-      style={{ background: "oklch(0.10 0.015 255)" }}
+      style={{ background: "oklch(1.0 0 0)" }}
     >
       {/* Background orbs */}
       <div
@@ -332,10 +330,10 @@ export default function RegisterDriverPage() {
                           ? "oklch(0.65 0.18 255)"
                           : active
                             ? "oklch(0.72 0.16 75)"
-                            : "oklch(0.18 0.02 255)",
+                            : "oklch(0.88 0 0)",
                         color:
                           done || active
-                            ? "oklch(0.10 0.015 255)"
+                            ? "oklch(1.0 0 0)"
                             : "oklch(0.50 0.04 255)",
                         boxShadow: active
                           ? "0 0 12px oklch(0.72 0.16 75 / 0.5)"
@@ -762,7 +760,7 @@ export default function RegisterDriverPage() {
               <div
                 className="rounded-xl p-5 space-y-3"
                 style={{
-                  background: "oklch(0.12 0.02 255)",
+                  background: "oklch(1.0 0 0)",
                   border: "1px solid oklch(0.22 0.03 255)",
                 }}
               >
@@ -807,7 +805,7 @@ export default function RegisterDriverPage() {
               <div
                 className="rounded-xl p-6 text-center"
                 style={{
-                  background: "oklch(0.12 0.02 255)",
+                  background: "oklch(1.0 0 0)",
                   border: "1px solid oklch(0.22 0.03 255)",
                 }}
               >
@@ -830,7 +828,7 @@ export default function RegisterDriverPage() {
               <div
                 className="rounded-xl p-4 flex items-center gap-3"
                 style={{
-                  background: "oklch(0.18 0.06 160 / 0.15)",
+                  background: "oklch(0.95 0.05 145)",
                   border: "1px solid oklch(0.40 0.10 160 / 0.3)",
                 }}
               >
@@ -863,7 +861,7 @@ export default function RegisterDriverPage() {
                   className="flex-1 font-bold text-base"
                   style={{
                     background: "oklch(0.72 0.16 75)",
-                    color: "oklch(0.10 0.015 255)",
+                    color: "oklch(1.0 0 0)",
                     boxShadow: paying
                       ? "none"
                       : "0 0 20px oklch(0.72 0.16 75 / 0.4)",
@@ -908,7 +906,7 @@ export default function RegisterDriverPage() {
                 }}
                 className="w-24 h-24 rounded-full flex items-center justify-center mx-auto"
                 style={{
-                  background: "oklch(0.18 0.08 160 / 0.3)",
+                  background: "oklch(0.92 0.05 145)",
                   border: "3px solid oklch(0.60 0.16 160)",
                   boxShadow: "0 0 40px oklch(0.60 0.16 160 / 0.4)",
                 }}
@@ -938,7 +936,7 @@ export default function RegisterDriverPage() {
               <div
                 className="rounded-xl p-5 text-left space-y-3"
                 style={{
-                  background: "oklch(0.12 0.02 255)",
+                  background: "oklch(1.0 0 0)",
                   border: "1px solid oklch(0.22 0.03 255)",
                 }}
               >

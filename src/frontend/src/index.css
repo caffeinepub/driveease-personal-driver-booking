@@ -12,39 +12,39 @@
 
 @layer base {
   :root {
-    --background: 0.06 0 0;
-    --foreground: 0.98 0 0;
-    --card: 0.1 0 0;
-    --card-foreground: 0.98 0 0;
-    --popover: 0.1 0 0;
-    --popover-foreground: 0.98 0 0;
-    --primary: 0.72 0.22 145;
-    --primary-foreground: 0.06 0 0;
-    --secondary: 0.15 0 0;
-    --secondary-foreground: 0.9 0 0;
-    --muted: 0.14 0 0;
-    --muted-foreground: 0.55 0 0;
-    --accent: 0.72 0.22 145;
-    --accent-foreground: 0.06 0 0;
+    --background: 1.0 0 0;
+    --foreground: 0.12 0 0;
+    --card: 1.0 0 0;
+    --card-foreground: 0.12 0 0;
+    --popover: 1.0 0 0;
+    --popover-foreground: 0.12 0 0;
+    --primary: 0.5 0.18 145;
+    --primary-foreground: 1.0 0 0;
+    --secondary: 0.95 0.02 145;
+    --secondary-foreground: 0.12 0 0;
+    --muted: 0.94 0 0;
+    --muted-foreground: 0.45 0 0;
+    --accent: 0.5 0.18 145;
+    --accent-foreground: 1.0 0 0;
     --destructive: 0.55 0.22 25;
-    --destructive-foreground: 0.98 0 0;
-    --border: 0.18 0 0;
-    --input: 0.14 0 0;
-    --ring: 0.72 0.22 145;
+    --destructive-foreground: 1.0 0 0;
+    --border: 0.88 0 0;
+    --input: 0.94 0 0;
+    --ring: 0.5 0.18 145;
     --radius: 0.5rem;
-    --chart-1: 0.72 0.22 145;
-    --chart-2: 0.65 0.18 200;
-    --chart-3: 0.6 0.18 160;
-    --chart-4: 0.7 0.12 30;
-    --chart-5: 0.55 0.2 300;
-    --sidebar: 0.08 0 0;
-    --sidebar-foreground: 0.98 0 0;
-    --sidebar-primary: 0.72 0.22 145;
-    --sidebar-primary-foreground: 0.06 0 0;
-    --sidebar-accent: 0.14 0 0;
-    --sidebar-accent-foreground: 0.9 0 0;
-    --sidebar-border: 0.18 0 0;
-    --sidebar-ring: 0.72 0.22 145;
+    --chart-1: 0.5 0.18 145;
+    --chart-2: 0.45 0.15 200;
+    --chart-3: 0.5 0.15 160;
+    --chart-4: 0.55 0.12 30;
+    --chart-5: 0.45 0.18 300;
+    --sidebar: 0.97 0 0;
+    --sidebar-foreground: 0.12 0 0;
+    --sidebar-primary: 0.5 0.18 145;
+    --sidebar-primary-foreground: 1.0 0 0;
+    --sidebar-accent: 0.94 0 0;
+    --sidebar-accent-foreground: 0.12 0 0;
+    --sidebar-border: 0.88 0 0;
+    --sidebar-ring: 0.5 0.18 145;
   }
 
   * {
@@ -66,21 +66,22 @@
 
 @layer components {
   .uber-card {
-    background: oklch(0.1 0 0);
-    border: 1px solid oklch(0.18 0 0);
+    background: oklch(1.0 0 0);
+    border: 1px solid oklch(0.88 0 0);
     border-radius: 0.75rem;
+    box-shadow: 0 1px 3px oklch(0 0 0 / 0.06);
   }
 
   .status-pending {
-    @apply bg-yellow-900/40 text-yellow-300 border-yellow-700;
+    @apply bg-yellow-50 text-yellow-700 border-yellow-300;
   }
   .status-confirmed {
-    @apply bg-green-900/40 text-green-300 border-green-700;
+    @apply bg-green-50 text-green-700 border-green-300;
   }
   .status-completed {
-    @apply bg-blue-900/40 text-blue-300 border-blue-700;
+    @apply bg-blue-50 text-blue-700 border-blue-300;
   }
   .status-cancelled {
-    @apply bg-red-900/40 text-red-300 border-red-700;
+    @apply bg-red-50 text-red-700 border-red-300;
   }
 }
