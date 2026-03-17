@@ -1,0 +1,86 @@
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url("/assets/fonts/PlusJakartaSans.woff2") format("woff2");
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0.06 0 0;
+    --foreground: 0.98 0 0;
+    --card: 0.1 0 0;
+    --card-foreground: 0.98 0 0;
+    --popover: 0.1 0 0;
+    --popover-foreground: 0.98 0 0;
+    --primary: 0.72 0.22 145;
+    --primary-foreground: 0.06 0 0;
+    --secondary: 0.15 0 0;
+    --secondary-foreground: 0.9 0 0;
+    --muted: 0.14 0 0;
+    --muted-foreground: 0.55 0 0;
+    --accent: 0.72 0.22 145;
+    --accent-foreground: 0.06 0 0;
+    --destructive: 0.55 0.22 25;
+    --destructive-foreground: 0.98 0 0;
+    --border: 0.18 0 0;
+    --input: 0.14 0 0;
+    --ring: 0.72 0.22 145;
+    --radius: 0.5rem;
+    --chart-1: 0.72 0.22 145;
+    --chart-2: 0.65 0.18 200;
+    --chart-3: 0.6 0.18 160;
+    --chart-4: 0.7 0.12 30;
+    --chart-5: 0.55 0.2 300;
+    --sidebar: 0.08 0 0;
+    --sidebar-foreground: 0.98 0 0;
+    --sidebar-primary: 0.72 0.22 145;
+    --sidebar-primary-foreground: 0.06 0 0;
+    --sidebar-accent: 0.14 0 0;
+    --sidebar-accent-foreground: 0.9 0 0;
+    --sidebar-border: 0.18 0 0;
+    --sidebar-ring: 0.72 0.22 145;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-body;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display;
+  }
+}
+
+@layer components {
+  .uber-card {
+    background: oklch(0.1 0 0);
+    border: 1px solid oklch(0.18 0 0);
+    border-radius: 0.75rem;
+  }
+
+  .status-pending {
+    @apply bg-yellow-900/40 text-yellow-300 border-yellow-700;
+  }
+  .status-confirmed {
+    @apply bg-green-900/40 text-green-300 border-green-700;
+  }
+  .status-completed {
+    @apply bg-blue-900/40 text-blue-300 border-blue-700;
+  }
+  .status-cancelled {
+    @apply bg-red-900/40 text-red-300 border-red-700;
+  }
+}
