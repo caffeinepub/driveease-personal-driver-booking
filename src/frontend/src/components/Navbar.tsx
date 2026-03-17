@@ -45,7 +45,7 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-6">
+        <nav className="hidden md:flex items-center gap-5">
           <Link
             to="/"
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
@@ -67,6 +67,13 @@ export default function Navbar() {
           >
             <PulseDot />
             Live
+          </Link>
+          <Link
+            to="/subscriptions"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            data-ocid="nav.subscriptions.link"
+          >
+            Subscriptions
           </Link>
           <Link
             to="/track"
@@ -142,6 +149,14 @@ export default function Navbar() {
           >
             <PulseDot />
             Live Drivers
+          </Link>
+          <Link
+            to="/subscriptions"
+            onClick={() => setOpen(false)}
+            className="text-sm font-medium text-foreground"
+            data-ocid="nav.subscriptions.link"
+          >
+            Subscriptions
           </Link>
           <Link
             to="/track"

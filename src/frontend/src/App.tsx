@@ -16,6 +16,7 @@ import DriversPage from "./pages/DriversPage";
 import LandingPage from "./pages/LandingPage";
 import LiveDriversPage from "./pages/LiveDriversPage";
 import RegisterDriverPage from "./pages/RegisterDriverPage";
+import SubscriptionsPage from "./pages/SubscriptionsPage";
 import TrackBookingPage from "./pages/TrackBookingPage";
 
 const queryClient = new QueryClient();
@@ -81,6 +82,12 @@ const dashboardRoute = createRoute({
   component: DashboardPage,
 });
 
+const subscriptionsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/subscriptions",
+  component: SubscriptionsPage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   driversRoute,
@@ -90,6 +97,7 @@ const routeTree = rootRoute.addChildren([
   trackRoute,
   registerDriverRoute,
   dashboardRoute,
+  subscriptionsRoute,
 ]);
 
 const router = createRouter({ routeTree });

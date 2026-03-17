@@ -15,7 +15,228 @@ import { useAvailableDrivers, useSeedDrivers } from "../hooks/useQueries";
 import { extractDriverLocation } from "../utils/driverLocation";
 
 const SKELETON_KEYS = ["sk1", "sk2", "sk3", "sk4", "sk5", "sk6"];
-const SEED_VERSION = "v6";
+const SEED_VERSION = "v7";
+
+const ALL_INDIAN_STATES = [
+  "Andhra Pradesh",
+  "Arunachal Pradesh",
+  "Assam",
+  "Bihar",
+  "Chhattisgarh",
+  "Delhi",
+  "Goa",
+  "Gujarat",
+  "Haryana",
+  "Himachal Pradesh",
+  "Jammu & Kashmir",
+  "Jharkhand",
+  "Karnataka",
+  "Kerala",
+  "Ladakh",
+  "Madhya Pradesh",
+  "Maharashtra",
+  "Manipur",
+  "Meghalaya",
+  "Mizoram",
+  "Nagaland",
+  "Odisha",
+  "Punjab",
+  "Rajasthan",
+  "Sikkim",
+  "Tamil Nadu",
+  "Telangana",
+  "Tripura",
+  "Uttar Pradesh",
+  "Uttarakhand",
+  "West Bengal",
+];
+
+const CITIES_BY_STATE: Record<string, string[]> = {
+  "Andhra Pradesh": [
+    "Visakhapatnam",
+    "Vijayawada",
+    "Guntur",
+    "Nellore",
+    "Kurnool",
+    "Tirupati",
+    "Amaravati",
+    "Kakinada",
+    "Rajahmundry",
+  ],
+  "Arunachal Pradesh": ["Itanagar", "Naharlagun", "Pasighat"],
+  Assam: ["Guwahati", "Silchar", "Dibrugarh", "Jorhat", "Nagaon", "Tinsukia"],
+  Bihar: [
+    "Patna",
+    "Gaya",
+    "Bhagalpur",
+    "Muzaffarpur",
+    "Purnia",
+    "Darbhanga",
+    "Bodh Gaya",
+    "Arrah",
+  ],
+  Chhattisgarh: ["Raipur", "Bhilai", "Bilaspur", "Korba", "Durg"],
+  Delhi: [
+    "New Delhi",
+    "Dwarka",
+    "Rohini",
+    "Lajpat Nagar",
+    "Connaught Place",
+    "Pitampura",
+  ],
+  Goa: ["Panaji", "Margao", "Vasco da Gama", "Mapusa", "Calangute"],
+  Gujarat: [
+    "Ahmedabad",
+    "Surat",
+    "Vadodara",
+    "Rajkot",
+    "Bhavnagar",
+    "Jamnagar",
+    "Gandhinagar",
+    "Anand",
+  ],
+  Haryana: [
+    "Gurgaon",
+    "Faridabad",
+    "Panipat",
+    "Ambala",
+    "Rohtak",
+    "Hisar",
+    "Karnal",
+    "Sonipat",
+  ],
+  "Himachal Pradesh": [
+    "Shimla",
+    "Manali",
+    "Dharamsala",
+    "Solan",
+    "Mandi",
+    "Kullu",
+  ],
+  "Jammu & Kashmir": ["Srinagar", "Jammu", "Anantnag", "Baramulla"],
+  Jharkhand: ["Ranchi", "Jamshedpur", "Dhanbad", "Bokaro", "Hazaribagh"],
+  Karnataka: [
+    "Bengaluru",
+    "Mysuru",
+    "Hubli",
+    "Mangaluru",
+    "Belagavi",
+    "Davangere",
+    "Shivamogga",
+    "Tumkur",
+  ],
+  Kerala: [
+    "Kochi",
+    "Thiruvananthapuram",
+    "Kozhikode",
+    "Thrissur",
+    "Kollam",
+    "Palakkad",
+    "Alappuzha",
+    "Kannur",
+  ],
+  Ladakh: ["Leh", "Kargil"],
+  "Madhya Pradesh": [
+    "Bhopal",
+    "Indore",
+    "Gwalior",
+    "Jabalpur",
+    "Ujjain",
+    "Sagar",
+    "Rewa",
+  ],
+  Maharashtra: [
+    "Mumbai",
+    "Pune",
+    "Nagpur",
+    "Nashik",
+    "Aurangabad",
+    "Kolhapur",
+    "Solapur",
+    "Thane",
+    "Navi Mumbai",
+  ],
+  Manipur: ["Imphal", "Thoubal", "Churachandpur"],
+  Meghalaya: ["Shillong", "Tura", "Cherrapunji"],
+  Mizoram: ["Aizawl", "Lunglei"],
+  Nagaland: ["Kohima", "Dimapur"],
+  Odisha: [
+    "Bhubaneswar",
+    "Cuttack",
+    "Puri",
+    "Rourkela",
+    "Berhampur",
+    "Sambalpur",
+  ],
+  Punjab: [
+    "Chandigarh",
+    "Ludhiana",
+    "Amritsar",
+    "Jalandhar",
+    "Patiala",
+    "Bathinda",
+    "Mohali",
+  ],
+  Rajasthan: [
+    "Jaipur",
+    "Udaipur",
+    "Jodhpur",
+    "Jaisalmer",
+    "Ajmer",
+    "Kota",
+    "Bikaner",
+    "Alwar",
+  ],
+  Sikkim: ["Gangtok", "Namchi"],
+  "Tamil Nadu": [
+    "Chennai",
+    "Coimbatore",
+    "Madurai",
+    "Trichy",
+    "Salem",
+    "Tirunelveli",
+    "Vellore",
+    "Erode",
+    "Tirupur",
+  ],
+  Telangana: [
+    "Hyderabad",
+    "Warangal",
+    "Nizamabad",
+    "Karimnagar",
+    "Secunderabad",
+  ],
+  Tripura: ["Agartala", "Dharmanagar"],
+  "Uttar Pradesh": [
+    "Lucknow",
+    "Agra",
+    "Varanasi",
+    "Kanpur",
+    "Prayagraj",
+    "Mathura",
+    "Noida",
+    "Ghaziabad",
+    "Meerut",
+    "Bareilly",
+  ],
+  Uttarakhand: [
+    "Dehradun",
+    "Haridwar",
+    "Rishikesh",
+    "Nainital",
+    "Haldwani",
+    "Roorkee",
+  ],
+  "West Bengal": [
+    "Kolkata",
+    "Darjeeling",
+    "Siliguri",
+    "Howrah",
+    "Durgapur",
+    "Asansol",
+    "Bardhaman",
+  ],
+};
 
 export default function DriversPage() {
   const { data: drivers, isLoading } = useAvailableDrivers();
@@ -47,21 +268,12 @@ export default function DriversPage() {
     }));
   }, [drivers]);
 
-  const uniqueStates = useMemo(() => {
-    return [...new Set(driversWithLocation.map((d) => d._location.state))]
-      .filter((s) => s !== "Other")
-      .sort();
-  }, [driversWithLocation]);
-
-  const filteredCities = useMemo(() => {
-    const source =
-      stateFilter !== "all"
-        ? driversWithLocation.filter((d) => d._location.state === stateFilter)
-        : driversWithLocation;
-    return [...new Set(source.map((d) => d._location.city))]
-      .filter((c) => c !== "Other")
-      .sort();
-  }, [driversWithLocation, stateFilter]);
+  const cityOptions = useMemo(() => {
+    if (stateFilter !== "all" && CITIES_BY_STATE[stateFilter]) {
+      return CITIES_BY_STATE[stateFilter];
+    }
+    return Object.values(CITIES_BY_STATE).flat().sort();
+  }, [stateFilter]);
 
   const handleStateChange = (value: string) => {
     setStateFilter(value);
@@ -120,14 +332,14 @@ export default function DriversPage() {
               <MapPin className="w-4 h-4 text-muted-foreground" />
               <Select value={stateFilter} onValueChange={handleStateChange}>
                 <SelectTrigger
-                  className="w-44"
+                  className="w-52"
                   data-ocid="drivers.state.select"
                 >
                   <SelectValue placeholder="All States" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-72 overflow-y-auto">
                   <SelectItem value="all">All States</SelectItem>
-                  {uniqueStates.map((state) => (
+                  {ALL_INDIAN_STATES.map((state) => (
                     <SelectItem key={state} value={state}>
                       {state}
                     </SelectItem>
@@ -137,17 +349,13 @@ export default function DriversPage() {
             </div>
 
             {/* City Filter */}
-            <Select
-              value={cityFilter}
-              onValueChange={setCityFilter}
-              disabled={stateFilter === "all"}
-            >
-              <SelectTrigger className="w-40" data-ocid="drivers.city.select">
+            <Select value={cityFilter} onValueChange={setCityFilter}>
+              <SelectTrigger className="w-48" data-ocid="drivers.city.select">
                 <SelectValue placeholder="All Cities" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-72 overflow-y-auto">
                 <SelectItem value="all">All Cities</SelectItem>
-                {filteredCities.map((city) => (
+                {cityOptions.map((city) => (
                   <SelectItem key={city} value={city}>
                     {city}
                   </SelectItem>

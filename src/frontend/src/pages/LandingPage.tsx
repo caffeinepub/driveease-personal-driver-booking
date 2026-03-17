@@ -2,14 +2,18 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "@tanstack/react-router";
 import {
+  BadgeCheck,
   CalendarCheck,
-  Car,
   CheckCircle,
   ChevronRight,
-  Clock,
+  CreditCard,
+  Heart,
   MapPin,
-  Shield,
+  RefreshCw,
+  ShieldCheck,
   Star,
+  UserCheck,
+  Users,
 } from "lucide-react";
 import { motion } from "motion/react";
 import DriverCard from "../components/DriverCard";
@@ -20,47 +24,78 @@ const GREEN_TINT = "oklch(0.97 0.02 145)";
 const GREEN_BORDER = "oklch(0.88 0.05 145)";
 const GREEN_ICON_BG = "oklch(0.95 0.05 145)";
 
+const trustBadges = [
+  { label: "Police Verified" },
+  { label: "Grooming Trained" },
+  { label: "Assigned Driver" },
+  { label: "Family Safe" },
+];
+
+const differenceCards = [
+  {
+    icon: UserCheck,
+    title: "Assigned Driver System",
+    desc: "Same driver for office, school, parents, medical. Build trust, not just trips.",
+  },
+  {
+    icon: Users,
+    title: "Family Account",
+    desc: "Son pays from Delhi, parents ride in Pune. Full family control with SOS, tracking, and spending limits.",
+  },
+  {
+    icon: RefreshCw,
+    title: "Subscription Plans",
+    desc: "Monthly plans from ₹4,999. Office commute, school runs, senior care — all covered.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Trust Transparency",
+    desc: "See police verification %, training badges, languages, years of experience. Know exactly who's driving your family.",
+  },
+];
+
 const steps = [
   {
-    icon: Car,
-    title: "Choose a Driver",
-    desc: "Browse our verified professional drivers with ratings and experience from all over India.",
+    icon: CreditCard,
+    title: "Choose a Subscription or Driver",
+    desc: "Browse monthly plans or pick a verified driver for a one-time trip.",
     step: "01",
   },
   {
-    icon: CalendarCheck,
-    title: "Book & Confirm",
-    desc: "Fill in your trip details and get an instant booking confirmation.",
+    icon: UserCheck,
+    title: "Get Your Assigned Driver",
+    desc: "We assign you a dedicated, trained driver who learns your preferences.",
     step: "02",
   },
   {
-    icon: MapPin,
-    title: "Enjoy the Ride",
-    desc: "Your driver arrives at your location. You relax, they drive your car.",
+    icon: Heart,
+    title: "Build a Trusted Relationship",
+    desc: "Same face every day. Your family trusts them. You depend on them.",
     step: "03",
   },
 ];
 
-const features = [
+const miniPlans = [
   {
-    icon: Shield,
-    title: "Safe & Verified",
-    desc: "All drivers are background-checked, Aadhaar & license verified.",
+    name: "Daily Commute",
+    price: "₹4,999",
+    period: "/mo",
+    icon: CreditCard,
+    desc: "2 hrs daily, assigned driver",
   },
   {
-    icon: Star,
-    title: "Best Prices",
-    desc: "Transparent pricing with no hidden fees. Always get the best deal.",
+    name: "Family Care",
+    price: "₹6,999",
+    period: "/mo",
+    icon: Users,
+    desc: "4 hrs, family account, SOS",
   },
   {
-    icon: Clock,
-    title: "On-Time",
-    desc: "Punctuality is our promise. Your driver will always be on time.",
-  },
-  {
-    icon: CheckCircle,
-    title: "Pan-India Coverage",
-    desc: "Drivers available in Delhi, Mumbai, Chennai, Kolkata, and 100+ cities.",
+    name: "Senior Care",
+    price: "₹7,999",
+    period: "/mo",
+    icon: Heart,
+    desc: "All-day, medical visits, care",
   },
 ];
 
@@ -102,17 +137,36 @@ export default function LandingPage() {
               }}
             >
               <Star className="w-3.5 h-3.5" fill="currentColor" />
-              Trusted by 10,000+ customers across India
+              India's First Personal Driver Network
             </div>
             <h1 className="font-display text-4xl md:text-6xl font-bold leading-tight text-foreground">
-              Hire a Professional Driver
+              Not just a ride,
               <br />
-              <span style={{ color: GREEN }}>Across India</span>
+              <span style={{ color: GREEN }}>a trusted driver.</span>
             </h1>
             <p className="text-lg max-w-md text-muted-foreground">
-              We provide verified drivers from every corner of India. Your car,
-              our expert driver — safe, affordable, on-time.
+              DriveEase is India's first Personal Driver Network. We don't
+              assign you a car — we assign you a relationship.
             </p>
+
+            {/* Trust Badge Strip */}
+            <div className="flex flex-wrap gap-2">
+              {trustBadges.map((badge) => (
+                <div
+                  key={badge.label}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold"
+                  style={{
+                    background: "oklch(0.50 0.18 145 / 0.10)",
+                    color: GREEN,
+                    border: "1px solid oklch(0.50 0.18 145 / 0.25)",
+                  }}
+                >
+                  <CheckCircle className="w-3 h-3" />
+                  {badge.label}
+                </div>
+              ))}
+            </div>
+
             <div className="flex flex-wrap gap-4">
               <Link to="/drivers">
                 <Button
@@ -122,6 +176,21 @@ export default function LandingPage() {
                   data-ocid="hero.primary_button"
                 >
                   Book a Driver Now <ChevronRight className="w-5 h-5 ml-1" />
+                </Button>
+              </Link>
+              <Link to="/subscriptions">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="font-semibold text-base px-8 rounded-full"
+                  style={{
+                    borderColor: GREEN_BORDER,
+                    color: GREEN,
+                    background: "white",
+                  }}
+                  data-ocid="hero.plans_button"
+                >
+                  View Plans →
                 </Button>
               </Link>
               <Link to="/register-driver">
@@ -162,19 +231,476 @@ export default function LandingPage() {
                   className="w-10 h-10 rounded-full flex items-center justify-center"
                   style={{ background: GREEN }}
                 >
-                  <Shield className="w-5 h-5 text-white" />
+                  <ShieldCheck className="w-5 h-5 text-white" />
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">
-                    All drivers are
+                    Assigned & Verified
                   </p>
                   <p className="text-sm font-semibold text-foreground">
-                    Verified & Insured
+                    Your Personal Driver
                   </p>
                 </div>
               </div>
             </div>
           </motion.div>
+        </div>
+      </section>
+
+      {/* The DriveEase Difference */}
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4">
+          <motion.div
+            className="text-center mb-14"
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-3">
+              The DriveEase Difference
+            </h2>
+            <p className="text-muted-foreground text-lg">
+              We don't just book drivers. We build relationships.
+            </p>
+          </motion.div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {differenceCards.map((f, i) => (
+              <motion.div
+                key={f.title}
+                className="uber-card p-6 transition-all duration-300"
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+                whileHover={{ y: -4 }}
+              >
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
+                  style={{
+                    background: GREEN_ICON_BG,
+                    border: `1px solid ${GREEN_BORDER}`,
+                  }}
+                >
+                  <f.icon className="w-6 h-6" style={{ color: GREEN }} />
+                </div>
+                <h3 className="font-display font-bold text-lg mb-2 text-foreground">
+                  {f.title}
+                </h3>
+                <p className="text-muted-foreground text-sm">{f.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Trust Transparency */}
+      <section className="py-20" style={{ background: GREEN_TINT }}>
+        <div className="container mx-auto px-4">
+          <motion.div
+            className="text-center mb-14"
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-3">
+              Know Your Driver Before They Arrive
+            </h2>
+            <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+              We believe emotional safety is as important as physical safety.
+            </p>
+          </motion.div>
+
+          <motion.div
+            className="max-w-2xl mx-auto rounded-2xl overflow-hidden"
+            style={{
+              background: "white",
+              border: `2px solid ${GREEN_BORDER}`,
+              boxShadow: "0 8px 40px oklch(0.50 0.18 145 / 0.10)",
+            }}
+            initial={{ opacity: 0, y: 32 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
+          >
+            {/* Header */}
+            <div
+              className="px-6 py-4 flex items-center gap-4"
+              style={{ background: GREEN }}
+            >
+              <div
+                className="w-14 h-14 rounded-full flex items-center justify-center text-2xl font-display font-bold text-white"
+                style={{ background: "oklch(0.42 0.15 145)" }}
+              >
+                RS
+              </div>
+              <div>
+                <h3 className="font-display font-bold text-lg text-white">
+                  Ramesh Sharma
+                </h3>
+                <p
+                  className="text-sm"
+                  style={{ color: "oklch(0.88 0.05 145)" }}
+                >
+                  Senior Driver · 8 Years Experience
+                </p>
+              </div>
+              <div className="ml-auto flex items-center gap-1">
+                <Star
+                  className="w-4 h-4"
+                  fill="oklch(0.78 0.18 75)"
+                  color="oklch(0.78 0.18 75)"
+                />
+                <span className="text-white font-bold">4.9</span>
+                <span
+                  className="text-xs ml-1"
+                  style={{ color: "oklch(0.88 0.05 145)" }}
+                >
+                  (Priority Rating)
+                </span>
+              </div>
+            </div>
+
+            <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {[
+                {
+                  icon: ShieldCheck,
+                  label: "Police Verification",
+                  value: "✓ Verified",
+                  ok: true,
+                },
+                {
+                  icon: BadgeCheck,
+                  label: "Background Check",
+                  value: "✓ Complete",
+                  ok: true,
+                },
+                {
+                  icon: Star,
+                  label: "Grooming Training",
+                  value: "✓ Certified — Jan 2024",
+                  ok: true,
+                },
+                {
+                  icon: Heart,
+                  label: "Medical Fitness",
+                  value: "✓ Fit",
+                  ok: true,
+                },
+                {
+                  icon: MapPin,
+                  label: "Languages",
+                  value: "Hindi, English, Marathi",
+                  ok: null,
+                },
+                {
+                  icon: CalendarCheck,
+                  label: "Experience",
+                  value: "8 Years",
+                  ok: null,
+                },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className="flex items-start gap-3 rounded-xl p-4"
+                  style={{
+                    background: item.ok
+                      ? "oklch(0.97 0.03 145)"
+                      : "oklch(0.97 0 0)",
+                    border: `1px solid ${item.ok ? GREEN_BORDER : "oklch(0.90 0 0)"}`,
+                  }}
+                >
+                  <item.icon
+                    className="w-5 h-5 mt-0.5 shrink-0"
+                    style={{ color: item.ok ? GREEN : "oklch(0.50 0 0)" }}
+                  />
+                  <div>
+                    <p className="text-xs text-muted-foreground">
+                      {item.label}
+                    </p>
+                    <p
+                      className="text-sm font-semibold"
+                      style={{ color: item.ok ? GREEN : "oklch(0.20 0 0)" }}
+                    >
+                      {item.value}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Training Badges */}
+            <div className="px-6 pb-6 flex flex-wrap gap-2">
+              {["Etiquette Pro", "Senior Care", "Family Driver"].map(
+                (badge) => (
+                  <div
+                    key={badge}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold"
+                    style={{
+                      background: GREEN_ICON_BG,
+                      color: GREEN,
+                      border: `1px solid ${GREEN_BORDER}`,
+                    }}
+                  >
+                    <BadgeCheck className="w-3.5 h-3.5" />
+                    {badge}
+                  </div>
+                ),
+              )}
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Subscription Teaser */}
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4">
+          <motion.div
+            className="text-center mb-12"
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-3">
+              Stop Booking. Start Subscribing.
+            </h2>
+            <p className="text-muted-foreground text-lg">
+              Monthly plans designed for every family need.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto mb-10">
+            {miniPlans.map((plan, i) => (
+              <motion.div
+                key={plan.name}
+                className="uber-card p-6 text-center"
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+                whileHover={{ y: -4 }}
+              >
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4"
+                  style={{
+                    background: GREEN_ICON_BG,
+                    border: `1px solid ${GREEN_BORDER}`,
+                  }}
+                >
+                  <plan.icon className="w-6 h-6" style={{ color: GREEN }} />
+                </div>
+                <h3 className="font-display font-bold text-lg text-foreground mb-1">
+                  {plan.name}
+                </h3>
+                <p className="text-xs text-muted-foreground mb-3">
+                  {plan.desc}
+                </p>
+                <p
+                  className="font-display font-bold text-2xl"
+                  style={{ color: GREEN }}
+                >
+                  {plan.price}
+                  <span className="text-sm font-normal text-muted-foreground">
+                    {plan.period}
+                  </span>
+                </p>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="text-center">
+            <Link to="/subscriptions">
+              <Button
+                size="lg"
+                className="font-semibold rounded-full px-10 text-white"
+                style={{ background: GREEN }}
+                data-ocid="landing.subscriptions.primary_button"
+              >
+                See All Plans <ChevronRight className="w-5 h-5 ml-1" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Family Account */}
+      <section className="py-20" style={{ background: GREEN_TINT }}>
+        <div className="container mx-auto px-4">
+          <div className="max-w-5xl mx-auto flex flex-col lg:flex-row gap-12 items-center">
+            {/* Left: Family Dashboard Mockup */}
+            <motion.div
+              className="flex-1"
+              initial={{ opacity: 0, x: -32 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+            >
+              <div
+                className="rounded-2xl overflow-hidden"
+                style={{
+                  background: "white",
+                  border: `2px solid ${GREEN_BORDER}`,
+                  boxShadow: "0 8px 32px oklch(0.50 0.18 145 / 0.10)",
+                }}
+              >
+                <div
+                  className="px-5 py-3 flex items-center gap-2"
+                  style={{ background: GREEN }}
+                >
+                  <Users className="w-5 h-5 text-white" />
+                  <span className="text-white font-semibold text-sm">
+                    Family Dashboard
+                  </span>
+                </div>
+                <div className="p-5 space-y-3">
+                  {[
+                    {
+                      name: "Arjun (Son)",
+                      role: "Admin",
+                      can: "Pay + Book + Track",
+                      color: GREEN,
+                    },
+                    {
+                      name: "Savita (Mother)",
+                      role: "Member",
+                      can: "Can Book",
+                      color: "oklch(0.50 0.15 200)",
+                    },
+                    {
+                      name: "Ramesh (Father)",
+                      role: "Member",
+                      can: "Can Book",
+                      color: "oklch(0.50 0.15 200)",
+                    },
+                  ].map((member) => (
+                    <div
+                      key={member.name}
+                      className="flex items-center justify-between rounded-xl p-3"
+                      style={{
+                        background: GREEN_TINT,
+                        border: `1px solid ${GREEN_BORDER}`,
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                          style={{ background: member.color }}
+                        >
+                          {member.name[0]}
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">
+                            {member.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {member.can}
+                          </p>
+                        </div>
+                      </div>
+                      <span
+                        className="text-xs font-semibold px-2 py-1 rounded-full"
+                        style={{
+                          background:
+                            member.color === GREEN
+                              ? "oklch(0.50 0.18 145 / 0.12)"
+                              : "oklch(0.50 0.15 200 / 0.12)",
+                          color: member.color,
+                        }}
+                      >
+                        {member.role}
+                      </span>
+                    </div>
+                  ))}
+                  <div
+                    className="rounded-xl p-3 flex items-center gap-2"
+                    style={{
+                      background: "oklch(0.55 0.22 25 / 0.08)",
+                      border: "1px solid oklch(0.55 0.22 25 / 0.25)",
+                    }}
+                  >
+                    <ShieldCheck
+                      className="w-4 h-4"
+                      style={{ color: "oklch(0.55 0.22 25)" }}
+                    />
+                    <span
+                      className="text-xs font-semibold"
+                      style={{ color: "oklch(0.45 0.18 25)" }}
+                    >
+                      SOS Alert → Goes to family, not support
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Right: Feature List */}
+            <motion.div
+              className="flex-1 space-y-6"
+              initial={{ opacity: 0, x: 32 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, delay: 0.15 }}
+            >
+              <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground">
+                One Family. One Account.
+                <br />
+                <span style={{ color: GREEN }}>Total Peace of Mind.</span>
+              </h2>
+              <p className="text-muted-foreground text-lg">
+                Son in Delhi, parents in Pune? Manage everything from one family
+                account.
+              </p>
+              <ul className="space-y-4">
+                {[
+                  {
+                    icon: Users,
+                    text: "Set who can book and who can only track",
+                  },
+                  {
+                    icon: CreditCard,
+                    text: "Spending limits per family member",
+                  },
+                  {
+                    icon: ShieldCheck,
+                    text: "SOS alert goes directly to family",
+                  },
+                  {
+                    icon: MapPin,
+                    text: "Real-time location sharing for all members",
+                  },
+                  {
+                    icon: UserCheck,
+                    text: "One trusted driver for the entire family",
+                  },
+                ].map((item) => (
+                  <li key={item.text} className="flex items-start gap-3">
+                    <div
+                      className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                      style={{
+                        background: GREEN_ICON_BG,
+                        border: `1px solid ${GREEN_BORDER}`,
+                      }}
+                    >
+                      <item.icon className="w-4 h-4" style={{ color: GREEN }} />
+                    </div>
+                    <span className="text-sm text-foreground font-medium pt-2">
+                      {item.text}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <Link to="/drivers">
+                <Button
+                  size="lg"
+                  className="font-semibold rounded-full px-8 text-white mt-4"
+                  style={{ background: GREEN }}
+                  data-ocid="landing.family.primary_button"
+                >
+                  Set Up Family Account →
+                </Button>
+              </Link>
+            </motion.div>
+          </div>
         </div>
       </section>
 
@@ -192,7 +718,7 @@ export default function LandingPage() {
               How It Works
             </h2>
             <p className="text-muted-foreground text-lg">
-              Three simple steps to get your driver
+              Three simple steps to your trusted driver
             </p>
           </motion.div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -230,57 +756,11 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Why Choose Us */}
-      <section className="py-20" style={{ background: GREEN_TINT }}>
-        <div className="container mx-auto px-4">
-          <motion.div
-            className="text-center mb-14"
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-3">
-              Why Choose DriveEase?
-            </h2>
-            <p className="text-muted-foreground text-lg">
-              Everything you need for a stress-free ride
-            </p>
-          </motion.div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map((f, i) => (
-              <motion.div
-                key={f.title}
-                className="uber-card p-6 transition-all duration-300"
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-                whileHover={{ y: -4 }}
-              >
-                <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
-                  style={{
-                    background: GREEN_ICON_BG,
-                    border: `1px solid ${GREEN_BORDER}`,
-                  }}
-                >
-                  <f.icon className="w-6 h-6" style={{ color: GREEN }} />
-                </div>
-                <h3 className="font-display font-bold text-lg mb-2 text-foreground">
-                  {f.title}
-                </h3>
-                <p className="text-muted-foreground text-sm">{f.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Brand Ambassador */}
       <section
         className="py-20 bg-background overflow-hidden"
         data-ocid="ambassador.section"
+        style={{ background: GREEN_TINT }}
       >
         <div className="container mx-auto px-4">
           <motion.div
@@ -314,7 +794,6 @@ export default function LandingPage() {
             }}
           >
             <div className="flex flex-col md:flex-row">
-              {/* Photo */}
               <motion.div
                 className="md:w-2/5 relative"
                 initial={{ opacity: 0, x: -40 }}
@@ -349,7 +828,6 @@ export default function LandingPage() {
                 </div>
               </motion.div>
 
-              {/* Text */}
               <motion.div
                 className="md:w-3/5 p-8 md:p-12 flex flex-col justify-center"
                 initial={{ opacity: 0, x: 40 }}
@@ -357,7 +835,6 @@ export default function LandingPage() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.7, delay: 0.15 }}
               >
-                {/* Stars */}
                 <div className="flex items-center gap-1 mb-5">
                   {[1, 2, 3, 4, 5].map((s) => (
                     <motion.div
@@ -435,7 +912,7 @@ export default function LandingPage() {
       </section>
 
       {/* Featured Drivers */}
-      <section className="py-20" style={{ background: GREEN_TINT }}>
+      <section className="py-20 bg-background">
         <div className="container mx-auto px-4">
           <motion.div
             className="flex items-center justify-between mb-10"
@@ -503,7 +980,7 @@ export default function LandingPage() {
       </section>
 
       {/* Driver CTA */}
-      <section className="py-16 bg-background">
+      <section className="py-16" style={{ background: GREEN_TINT }}>
         <div className="container mx-auto px-4 text-center">
           <motion.div
             initial={{ opacity: 0, y: 24 }}

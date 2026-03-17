@@ -1,7 +1,14 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "@tanstack/react-router";
-import { Clock, Globe, MapPin, Star } from "lucide-react";
+import {
+  BadgeCheck,
+  Clock,
+  Globe,
+  MapPin,
+  ShieldCheck,
+  Star,
+} from "lucide-react";
 import type { Driver } from "../backend";
 
 const GREEN = "oklch(0.50 0.18 145)";
@@ -207,10 +214,7 @@ export default function DriverCard({ driver, index }: DriverCardProps) {
         ) : (
           <div
             className="w-full h-48 flex items-center justify-center text-4xl font-display font-bold"
-            style={{
-              background: "oklch(0.96 0.03 145)",
-              color: GREEN,
-            }}
+            style={{ background: "oklch(0.96 0.03 145)", color: GREEN }}
           >
             {initials}
           </div>
@@ -242,9 +246,19 @@ export default function DriverCard({ driver, index }: DriverCardProps) {
 
       <div className="p-5">
         <div className="flex items-start justify-between mb-1">
-          <h3 className="font-display font-bold text-lg text-foreground">
-            {driver.name}
-          </h3>
+          <div>
+            <h3 className="font-display font-bold text-lg text-foreground">
+              {driver.name}
+            </h3>
+            {/* Verified Badge */}
+            <div
+              className="flex items-center gap-1 mt-0.5"
+              style={{ color: GREEN }}
+            >
+              <BadgeCheck className="w-3.5 h-3.5" />
+              <span className="text-xs font-semibold">Verified</span>
+            </div>
+          </div>
           <div
             className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full"
             style={{
@@ -258,21 +272,53 @@ export default function DriverCard({ driver, index }: DriverCardProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-1 mb-3">
-          {stars.map((s) => (
-            <Star
-              key={s}
-              className="w-4 h-4"
-              style={{
-                fill: s <= Math.round(driver.rating) ? GREEN : "transparent",
-                color:
-                  s <= Math.round(driver.rating) ? GREEN : "oklch(0.80 0 0)",
-              }}
-            />
-          ))}
-          <span className="text-sm text-muted-foreground ml-1">
-            {driver.rating.toFixed(1)}
+        {/* Behavior Rating — priority */}
+        <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-1">
+            {stars.map((s) => (
+              <Star
+                key={s}
+                className="w-4 h-4"
+                style={{
+                  fill: s <= Math.round(driver.rating) ? GREEN : "transparent",
+                  color:
+                    s <= Math.round(driver.rating) ? GREEN : "oklch(0.80 0 0)",
+                }}
+              />
+            ))}
+          </div>
+          <span className="text-sm font-semibold" style={{ color: GREEN }}>
+            Behavior: {driver.rating.toFixed(1)}
           </span>
+          <span className="text-xs text-muted-foreground">
+            (Priority Rating)
+          </span>
+        </div>
+
+        {/* Trust Chips */}
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          <div
+            className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium"
+            style={{
+              background: "oklch(0.96 0.03 145)",
+              color: GREEN,
+              border: "1px solid oklch(0.88 0.04 145)",
+            }}
+          >
+            <ShieldCheck className="w-3 h-3" />
+            Background Check
+          </div>
+          <div
+            className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium"
+            style={{
+              background: "oklch(0.96 0.03 145)",
+              color: GREEN,
+              border: "1px solid oklch(0.88 0.04 145)",
+            }}
+          >
+            <BadgeCheck className="w-3 h-3" />
+            Grooming Trained
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-2 mb-3">
