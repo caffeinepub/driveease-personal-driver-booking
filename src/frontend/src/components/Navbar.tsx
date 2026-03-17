@@ -1,7 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "@tanstack/react-router";
-import { Car, Menu, X } from "lucide-react";
-import { useState } from "react";
+import { Car, LogOut, Menu, User, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import type { CustomerProfile } from "../backend.d";
+import CustomerLoginModal from "./CustomerLoginModal";
 
 const GREEN = "oklch(0.50 0.18 145)";
 
@@ -22,165 +24,293 @@ function PulseDot() {
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
+  const [customer, setCustomer] = useState<CustomerProfile | null>(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("driveease_customer");
+    if (stored) {
+      try {
+        setCustomer(JSON.parse(stored) as CustomerProfile);
+      } catch {
+        localStorage.removeItem("driveease_customer");
+      }
+    }
+  }, []);
+
+  const handleLoginSuccess = (profile: CustomerProfile) => {
+    setCustomer(profile);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("driveease_customer");
+    setCustomer(null);
+  };
 
   return (
-    <header
-      className="sticky top-0 z-50 border-b bg-white"
-      style={{ borderColor: "oklch(0.88 0 0)" }}
-    >
-      <div className="container mx-auto px-4 flex items-center justify-between h-16">
-        <Link
-          to="/"
-          className="flex items-center gap-2 font-display font-bold text-xl"
-          style={{ color: "oklch(0.12 0 0)" }}
-          data-ocid="nav.home.link"
-        >
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center"
-            style={{ background: GREEN }}
-          >
-            <Car className="w-4 h-4 text-white" />
-          </div>
-          DriveEase
-        </Link>
-
-        {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-5">
+    <>
+      <header
+        className="sticky top-0 z-50 border-b bg-white"
+        style={{ borderColor: "oklch(0.88 0 0)" }}
+      >
+        <div className="container mx-auto px-4 flex items-center justify-between h-16">
           <Link
             to="/"
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-2 font-display font-bold text-xl"
+            style={{ color: "oklch(0.12 0 0)" }}
             data-ocid="nav.home.link"
           >
-            Home
-          </Link>
-          <Link
-            to="/drivers"
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            data-ocid="nav.drivers.link"
-          >
-            Drivers
-          </Link>
-          <Link
-            to="/live"
-            className="text-sm font-medium flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
-            data-ocid="nav.live.link"
-          >
-            <PulseDot />
-            Live
-          </Link>
-          <Link
-            to="/subscriptions"
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            data-ocid="nav.subscriptions.link"
-          >
-            Subscriptions
-          </Link>
-          <Link
-            to="/track"
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            data-ocid="nav.track.link"
-          >
-            Track Booking
-          </Link>
-          <Link to="/register-driver" data-ocid="nav.register.link">
-            <Button
-              size="sm"
-              variant="outline"
-              className="font-semibold"
-              style={{
-                borderColor: GREEN,
-                color: GREEN,
-                background: "transparent",
-              }}
-            >
-              Register as Driver
-            </Button>
-          </Link>
-          <Link to="/drivers">
-            <Button
-              size="sm"
-              className="font-semibold rounded-full px-5 text-white"
-              style={{ background: GREEN }}
-              data-ocid="nav.book.primary_button"
-            >
-              Book a Driver
-            </Button>
-          </Link>
-        </nav>
-
-        {/* Mobile Menu Button */}
-        <button
-          type="button"
-          className="md:hidden p-2 rounded-lg text-muted-foreground hover:text-foreground"
-          onClick={() => setOpen(!open)}
-          aria-label="Toggle menu"
-        >
-          {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
-      </div>
-
-      {/* Mobile Nav */}
-      {open && (
-        <div
-          className="md:hidden border-t px-4 py-4 flex flex-col gap-4 bg-white"
-          style={{ borderColor: "oklch(0.88 0 0)" }}
-        >
-          <Link
-            to="/"
-            onClick={() => setOpen(false)}
-            className="text-sm font-medium text-foreground"
-            data-ocid="nav.home.link"
-          >
-            Home
-          </Link>
-          <Link
-            to="/drivers"
-            onClick={() => setOpen(false)}
-            className="text-sm font-medium text-foreground"
-            data-ocid="nav.drivers.link"
-          >
-            Drivers
-          </Link>
-          <Link
-            to="/live"
-            onClick={() => setOpen(false)}
-            className="text-sm font-medium flex items-center gap-1.5 text-foreground"
-            data-ocid="nav.live.link"
-          >
-            <PulseDot />
-            Live Drivers
-          </Link>
-          <Link
-            to="/subscriptions"
-            onClick={() => setOpen(false)}
-            className="text-sm font-medium text-foreground"
-            data-ocid="nav.subscriptions.link"
-          >
-            Subscriptions
-          </Link>
-          <Link
-            to="/track"
-            onClick={() => setOpen(false)}
-            className="text-sm font-medium text-foreground"
-            data-ocid="nav.track.link"
-          >
-            Track Booking
-          </Link>
-          <Link
-            to="/register-driver"
-            onClick={() => setOpen(false)}
-            data-ocid="nav.register.link"
-          >
-            <Button
-              size="sm"
-              className="w-full font-semibold rounded-full text-white"
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center"
               style={{ background: GREEN }}
             >
-              Register as Driver
-            </Button>
+              <Car className="w-4 h-4 text-white" />
+            </div>
+            DriveEase
           </Link>
+
+          {/* Desktop Nav */}
+          <nav className="hidden md:flex items-center gap-5">
+            <Link
+              to="/"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              data-ocid="nav.home.link"
+            >
+              Home
+            </Link>
+            <Link
+              to="/drivers"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              data-ocid="nav.drivers.link"
+            >
+              Drivers
+            </Link>
+            <Link
+              to="/live"
+              className="text-sm font-medium flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
+              data-ocid="nav.live.link"
+            >
+              <PulseDot />
+              Live
+            </Link>
+            <Link
+              to="/subscriptions"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              data-ocid="nav.subscriptions.link"
+            >
+              Subscriptions
+            </Link>
+            <Link
+              to="/track"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              data-ocid="nav.track.link"
+            >
+              Track Booking
+            </Link>
+
+            {/* Customer Auth */}
+            {customer ? (
+              <div className="flex items-center gap-2">
+                <div
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold"
+                  style={{
+                    background: "oklch(0.95 0.05 145)",
+                    color: GREEN,
+                    border: "1px solid oklch(0.80 0.10 145)",
+                  }}
+                >
+                  <User className="w-3.5 h-3.5" />
+                  {customer.name.split(" ")[0]}
+                </div>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  data-ocid="nav.logout.button"
+                >
+                  <LogOut className="w-3 h-3" />
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <Button
+                size="sm"
+                variant="outline"
+                className="font-semibold"
+                style={{
+                  borderColor: GREEN,
+                  color: GREEN,
+                  background: "transparent",
+                }}
+                onClick={() => setLoginOpen(true)}
+                data-ocid="nav.login.button"
+              >
+                Login
+              </Button>
+            )}
+
+            <Link to="/driver-login" data-ocid="nav.driver_login.link">
+              <Button
+                size="sm"
+                variant="ghost"
+                className="font-semibold text-xs"
+                style={{ color: "oklch(0.50 0.18 145)" }}
+              >
+                Check Driver Status
+              </Button>
+            </Link>
+            <Link to="/register-driver" data-ocid="nav.register.link">
+              <Button
+                size="sm"
+                variant="outline"
+                className="font-semibold"
+                style={{
+                  borderColor: GREEN,
+                  color: GREEN,
+                  background: "transparent",
+                }}
+              >
+                Register as Driver
+              </Button>
+            </Link>
+            <Link to="/drivers">
+              <Button
+                size="sm"
+                className="font-semibold rounded-full px-5 text-white"
+                style={{ background: GREEN }}
+                data-ocid="nav.book.primary_button"
+              >
+                Book a Driver
+              </Button>
+            </Link>
+          </nav>
+
+          {/* Mobile Menu Button */}
+          <button
+            type="button"
+            className="md:hidden p-2 rounded-lg text-muted-foreground hover:text-foreground"
+            onClick={() => setOpen(!open)}
+            aria-label="Toggle menu"
+          >
+            {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
         </div>
-      )}
-    </header>
+
+        {/* Mobile Nav */}
+        {open && (
+          <div
+            className="md:hidden border-t px-4 py-4 flex flex-col gap-4 bg-white"
+            style={{ borderColor: "oklch(0.88 0 0)" }}
+          >
+            <Link
+              to="/"
+              onClick={() => setOpen(false)}
+              className="text-sm font-medium text-foreground"
+              data-ocid="nav.home.link"
+            >
+              Home
+            </Link>
+            <Link
+              to="/drivers"
+              onClick={() => setOpen(false)}
+              className="text-sm font-medium text-foreground"
+              data-ocid="nav.drivers.link"
+            >
+              Drivers
+            </Link>
+            <Link
+              to="/live"
+              onClick={() => setOpen(false)}
+              className="text-sm font-medium flex items-center gap-1.5 text-foreground"
+              data-ocid="nav.live.link"
+            >
+              <PulseDot />
+              Live Drivers
+            </Link>
+            <Link
+              to="/subscriptions"
+              onClick={() => setOpen(false)}
+              className="text-sm font-medium text-foreground"
+              data-ocid="nav.subscriptions.link"
+            >
+              Subscriptions
+            </Link>
+            <Link
+              to="/track"
+              onClick={() => setOpen(false)}
+              className="text-sm font-medium text-foreground"
+              data-ocid="nav.track.link"
+            >
+              Track Booking
+            </Link>
+
+            {customer ? (
+              <div className="flex items-center gap-3">
+                <div
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold"
+                  style={{
+                    background: "oklch(0.95 0.05 145)",
+                    color: GREEN,
+                  }}
+                >
+                  <User className="w-3.5 h-3.5" />
+                  {customer.name}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleLogout();
+                    setOpen(false);
+                  }}
+                  className="text-xs text-muted-foreground flex items-center gap-1"
+                  data-ocid="nav.logout.button"
+                >
+                  <LogOut className="w-3 h-3" />
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full font-semibold"
+                style={{
+                  borderColor: GREEN,
+                  color: GREEN,
+                  background: "transparent",
+                }}
+                onClick={() => {
+                  setLoginOpen(true);
+                  setOpen(false);
+                }}
+                data-ocid="nav.login.button"
+              >
+                Login
+              </Button>
+            )}
+
+            <Link
+              to="/register-driver"
+              onClick={() => setOpen(false)}
+              data-ocid="nav.register.link"
+            >
+              <Button
+                size="sm"
+                className="w-full font-semibold rounded-full text-white"
+                style={{ background: GREEN }}
+              >
+                Register as Driver
+              </Button>
+            </Link>
+          </div>
+        )}
+      </header>
+
+      <CustomerLoginModal
+        open={loginOpen}
+        onOpenChange={setLoginOpen}
+        onLoginSuccess={handleLoginSuccess}
+      />
+    </>
   );
 }

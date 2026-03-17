@@ -33,11 +33,16 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   useAllBookings,
   useAllDrivers,
+  useAllRegistrations,
+  useApproveDriverRegistration,
   useDeleteDriver,
+  useRejectDriverRegistration,
   useUpdateBookingStatus,
 } from "@/hooks/useQueries";
 import {
   Car,
+  CheckCircle2,
+  Clock,
   Download,
   Eye,
   EyeOff,
@@ -50,6 +55,7 @@ import {
   TrendingUp,
   Users,
   X,
+  XCircle,
 } from "lucide-react";
 import type React from "react";
 import { useRef, useState } from "react";
@@ -456,6 +462,17 @@ export default function DashboardPage() {
   const updateStatus = useUpdateBookingStatus();
   const deleteDriverMutation = useDeleteDriver();
 
+  // Registration approvals
+  const { data: registrations, isLoading: registrationsLoading } =
+    useAllRegistrations();
+  const approveRegistration = useApproveDriverRegistration();
+  const rejectRegistration = useRejectDriverRegistration();
+
+  const pendingRegistrations = (registrations || []).filter(
+    (r) => r.status === "pending",
+  );
+  const pendingDriversCount = pendingRegistrations.length;
+
   // Enquiries from localStorage (subscription form submissions)
   const [enquiries, setEnquiries] = useState<LocalEnquiry[]>(() =>
     JSON.parse(localStorage.getItem("driveease_enquiries") || "[]"),
@@ -745,7 +762,7 @@ export default function DashboardPage() {
 
       <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
         {/* Stat Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <StatCard
             icon={<TrendingUp className="w-5 h-5" />}
             label="Total Bookings"
@@ -776,6 +793,12 @@ export default function DashboardPage() {
             value={String(totalEnquiries)}
             color="oklch(0.50 0.18 290)"
           />
+          <StatCard
+            icon={<Clock className="w-5 h-5" />}
+            label="Pending Approvals"
+            value={String(pendingDriversCount)}
+            color="oklch(0.60 0.16 75)"
+          />
         </div>
 
         {/* Phone Lookup */}
@@ -804,6 +827,18 @@ export default function DashboardPage() {
               className="data-[state=active]:text-white rounded-md text-sm"
             >
               Drivers
+            </TabsTrigger>
+            <TabsTrigger
+              value="approvals"
+              data-ocid="dashboard.approvals.tab"
+              className="data-[state=active]:text-white rounded-md text-sm"
+            >
+              Driver Approvals
+              {pendingDriversCount > 0 && (
+                <span className="ml-1 bg-orange-500 text-white text-xs rounded-full px-1.5 py-0.5">
+                  {pendingDriversCount}
+                </span>
+              )}
             </TabsTrigger>
           </TabsList>
 
@@ -1252,6 +1287,157 @@ export default function DashboardPage() {
                     </TableBody>
                   </Table>
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* ── Approvals Tab ──────────────────────────────────── */}
+          <TabsContent value="approvals" className="mt-4">
+            <Card className="shadow-sm">
+              <CardHeader className="pb-3 flex flex-row items-center justify-between gap-4">
+                <CardTitle className="text-base font-semibold">
+                  Driver Approval Requests
+                </CardTitle>
+                <span className="text-sm text-muted-foreground">
+                  {pendingDriversCount} pending
+                </span>
+              </CardHeader>
+              <CardContent className="p-0">
+                {registrationsLoading ? (
+                  <Table>
+                    <TableBody>
+                      <TableSkeleton cols={6} />
+                    </TableBody>
+                  </Table>
+                ) : (registrations || []).length === 0 ? (
+                  <div
+                    className="py-12 text-center text-muted-foreground"
+                    data-ocid="approvals.empty_state"
+                  >
+                    No driver registration requests yet
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table data-ocid="approvals.table">
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Mobile</TableHead>
+                          <TableHead>City / State</TableHead>
+                          <TableHead>Documents</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {[...(registrations || [])]
+                          .sort((a, b) => {
+                            if (
+                              a.status === "pending" &&
+                              b.status !== "pending"
+                            )
+                              return -1;
+                            if (
+                              a.status !== "pending" &&
+                              b.status === "pending"
+                            )
+                              return 1;
+                            return 0;
+                          })
+                          .map((reg, idx) => (
+                            <TableRow
+                              key={reg.id.toString()}
+                              data-ocid={`approvals.item.${idx + 1}`}
+                            >
+                              <TableCell>
+                                <div className="font-medium">{reg.name}</div>
+                                <div className="text-xs text-muted-foreground font-mono">
+                                  {reg.applicationId}
+                                </div>
+                              </TableCell>
+                              <TableCell>{reg.phone}</TableCell>
+                              <TableCell>
+                                {reg.city}, {reg.state}
+                              </TableCell>
+                              <TableCell>
+                                <div className="text-xs space-y-1">
+                                  <div className="flex items-center gap-1">
+                                    <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
+                                    DL: {reg.licenseNumber}
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <span className="w-2 h-2 rounded-full bg-blue-400 inline-block" />
+                                    Aadhaar: {reg.aadhaarNumber}
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                {reg.status === "pending" && (
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-50 text-yellow-700 border border-yellow-300">
+                                    <Clock className="w-3 h-3 mr-1" /> Pending
+                                  </span>
+                                )}
+                                {reg.status === "approved" && (
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-300">
+                                    <CheckCircle2 className="w-3 h-3 mr-1" />{" "}
+                                    Approved
+                                  </span>
+                                )}
+                                {reg.status === "rejected" && (
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-300">
+                                    <XCircle className="w-3 h-3 mr-1" />{" "}
+                                    Rejected
+                                  </span>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                {reg.status === "pending" && (
+                                  <div className="flex gap-2">
+                                    <Button
+                                      size="sm"
+                                      className="bg-green-600 hover:bg-green-700 text-white text-xs h-7 px-3"
+                                      disabled={approveRegistration.isPending}
+                                      onClick={async () => {
+                                        await approveRegistration.mutateAsync(
+                                          reg.id,
+                                        );
+                                        toast.success(
+                                          `${reg.name} approved. SMS sent.`,
+                                        );
+                                      }}
+                                      data-ocid={`approvals.confirm_button.${idx + 1}`}
+                                    >
+                                      Approve
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="destructive"
+                                      className="text-xs h-7 px-3"
+                                      disabled={rejectRegistration.isPending}
+                                      onClick={async () => {
+                                        await rejectRegistration.mutateAsync(
+                                          reg.id,
+                                        );
+                                        toast.success(`${reg.name} rejected.`);
+                                      }}
+                                      data-ocid={`approvals.delete_button.${idx + 1}`}
+                                    >
+                                      Reject
+                                    </Button>
+                                  </div>
+                                )}
+                                {reg.status !== "pending" && (
+                                  <span className="text-xs text-muted-foreground">
+                                    No action needed
+                                  </span>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

@@ -1,9 +1,20 @@
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "@tanstack/react-router";
 import {
   BadgeCheck,
+  Calculator,
   CalendarCheck,
+  Car,
   CheckCircle,
   ChevronRight,
   CreditCard,
@@ -16,6 +27,7 @@ import {
   Users,
 } from "lucide-react";
 import { motion } from "motion/react";
+import { useState } from "react";
 import DriverCard from "../components/DriverCard";
 import { useAvailableDrivers } from "../hooks/useQueries";
 
@@ -106,9 +118,89 @@ const ambassadorStats = [
   { label: "Years with Us", value: "3+" },
 ];
 
+const BASE_RATES: Record<string, number> = {
+  Hatchback: 120,
+  Sedan: 150,
+  SUV: 200,
+  Luxury: 350,
+  Electric: 180,
+};
+
+const DURATION_HOURS: Record<string, number> = {
+  "1 Hour": 1,
+  "2 Hours": 2,
+  "3 Hours": 3,
+  "Half Day (4 hrs)": 4,
+  "Full Day (8 hrs)": 8,
+};
+
+const CITY_MULTIPLIER: Record<string, number> = {
+  Mumbai: 1.3,
+  Delhi: 1.3,
+  Bangalore: 1.15,
+  Hyderabad: 1.15,
+  Chennai: 1.15,
+  Pune: 1.15,
+};
+
+function getCityMultiplier(city: string): number {
+  return CITY_MULTIPLIER[city] ?? 1.0;
+}
+
+function roundToNearest10(n: number): number {
+  return Math.round(n / 10) * 10;
+}
+
+interface EstimateResult {
+  low: number;
+  high: number;
+  base: number;
+  hours: number;
+  multiplier: number;
+  carType: string;
+  duration: string;
+}
+
 export default function LandingPage() {
   const { data: drivers, isLoading } = useAvailableDrivers();
   const featuredDrivers = drivers?.slice(0, 3) ?? [];
+
+  const [pickupAddress, setPickupAddress] = useState("");
+  const [journeyDate, setJourneyDate] = useState("");
+  const [journeyTime, setJourneyTime] = useState("");
+  const [duration, setDuration] = useState("");
+  const [carType, setCarType] = useState("");
+  const [city, setCity] = useState("");
+  const [estimate, setEstimate] = useState<EstimateResult | null>(null);
+  const [estimateError, setEstimateError] = useState("");
+
+  function handleCheckEstimate() {
+    if (
+      !pickupAddress ||
+      !journeyDate ||
+      !journeyTime ||
+      !duration ||
+      !carType ||
+      !city
+    ) {
+      setEstimateError("Please fill in all fields to get an estimate.");
+      return;
+    }
+    setEstimateError("");
+    const base = BASE_RATES[carType];
+    const hours = DURATION_HOURS[duration];
+    const multiplier = getCityMultiplier(city);
+    const price = base * hours * multiplier;
+    setEstimate({
+      low: roundToNearest10(price * 0.9),
+      high: roundToNearest10(price * 1.1),
+      base,
+      hours,
+      multiplier,
+      carType,
+      duration,
+    });
+  }
 
   return (
     <div>
@@ -752,6 +844,357 @@ export default function LandingPage() {
                 <p className="text-muted-foreground">{step.desc}</p>
               </motion.div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Price Estimate ─── */}
+      <section
+        className="py-20"
+        style={{ background: GREEN_TINT }}
+        data-ocid="estimate.section"
+      >
+        <div className="container mx-auto px-4">
+          <motion.div
+            className="text-center mb-12"
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <div
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold mb-4"
+              style={{
+                background: "oklch(0.50 0.18 145 / 0.12)",
+                color: GREEN,
+                border: "1px solid oklch(0.50 0.18 145 / 0.25)",
+              }}
+            >
+              <Calculator className="w-4 h-4" />
+              Instant Fare Calculator
+            </div>
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-3">
+              Price Estimate
+            </h2>
+            <p className="text-muted-foreground text-lg">
+              Get an instant fare estimate for your journey
+            </p>
+          </motion.div>
+
+          <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+            {/* Form card */}
+            <motion.div
+              className="rounded-2xl p-8"
+              style={{
+                background: "white",
+                border: `2px solid ${GREEN_BORDER}`,
+                boxShadow: "0 8px 40px oklch(0.50 0.18 145 / 0.10)",
+              }}
+              initial={{ opacity: 0, y: 32 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className="space-y-5">
+                {/* From */}
+                <div className="space-y-1.5">
+                  <Label
+                    htmlFor="pickup"
+                    className="text-sm font-semibold text-foreground"
+                  >
+                    From
+                  </Label>
+                  <Input
+                    id="pickup"
+                    placeholder="Pickup Address"
+                    value={pickupAddress}
+                    onChange={(e) => setPickupAddress(e.target.value)}
+                    data-ocid="estimate.input"
+                  />
+                </div>
+
+                {/* Date & Time row */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="journey-date"
+                      className="text-sm font-semibold text-foreground"
+                    >
+                      Date of Journey
+                    </Label>
+                    <Input
+                      id="journey-date"
+                      type="date"
+                      value={journeyDate}
+                      onChange={(e) => setJourneyDate(e.target.value)}
+                      data-ocid="estimate.input"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="journey-time"
+                      className="text-sm font-semibold text-foreground"
+                    >
+                      Time of Journey
+                    </Label>
+                    <Input
+                      id="journey-time"
+                      type="time"
+                      value={journeyTime}
+                      onChange={(e) => setJourneyTime(e.target.value)}
+                      data-ocid="estimate.input"
+                    />
+                  </div>
+                </div>
+
+                {/* Duration */}
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-semibold text-foreground">
+                    Duration
+                  </Label>
+                  <Select value={duration} onValueChange={setDuration}>
+                    <SelectTrigger data-ocid="estimate.select">
+                      <SelectValue placeholder="Select duration" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.keys(DURATION_HOURS).map((d) => (
+                        <SelectItem key={d} value={d}>
+                          {d}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Car Type */}
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-semibold text-foreground">
+                    Car Type
+                  </Label>
+                  <Select value={carType} onValueChange={setCarType}>
+                    <SelectTrigger data-ocid="estimate.select">
+                      <SelectValue placeholder="Select car type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.keys(BASE_RATES).map((c) => (
+                        <SelectItem key={c} value={c}>
+                          {c}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* City */}
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-semibold text-foreground">
+                    City
+                  </Label>
+                  <Select value={city} onValueChange={setCity}>
+                    <SelectTrigger data-ocid="estimate.select">
+                      <SelectValue placeholder="Select city" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[
+                        "Delhi",
+                        "Mumbai",
+                        "Bangalore",
+                        "Kolkata",
+                        "Hyderabad",
+                        "Chennai",
+                        "Pune",
+                        "Jaipur",
+                        "Ahmedabad",
+                        "Surat",
+                        "Lucknow",
+                        "Kanpur",
+                        "Nagpur",
+                        "Indore",
+                        "Thane",
+                      ].map((c) => (
+                        <SelectItem key={c} value={c}>
+                          {c}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {estimateError && (
+                  <p
+                    className="text-sm font-medium"
+                    style={{ color: "oklch(0.55 0.22 25)" }}
+                    data-ocid="estimate.error_state"
+                  >
+                    {estimateError}
+                  </p>
+                )}
+
+                <Button
+                  size="lg"
+                  className="w-full font-semibold text-base rounded-xl text-white"
+                  style={{ background: GREEN }}
+                  onClick={handleCheckEstimate}
+                  data-ocid="estimate.primary_button"
+                >
+                  <Calculator className="w-5 h-5 mr-2" />
+                  Check Estimate
+                </Button>
+              </div>
+            </motion.div>
+
+            {/* Result / Illustration side */}
+            <div className="flex flex-col gap-6">
+              {estimate ? (
+                <motion.div
+                  key="result"
+                  className="rounded-2xl p-8"
+                  style={{
+                    background: "white",
+                    borderLeft: `6px solid ${GREEN}`,
+                    border: `2px solid ${GREEN_BORDER}`,
+                    borderLeftWidth: 6,
+                    boxShadow: "0 8px 40px oklch(0.50 0.18 145 / 0.12)",
+                  }}
+                  initial={{ opacity: 0, y: 24 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                  data-ocid="estimate.success_state"
+                >
+                  <div className="flex items-center gap-3 mb-6">
+                    <div
+                      className="w-12 h-12 rounded-xl flex items-center justify-center"
+                      style={{
+                        background: GREEN_ICON_BG,
+                        border: `1px solid ${GREEN_BORDER}`,
+                      }}
+                    >
+                      <Car className="w-6 h-6" style={{ color: GREEN }} />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+                        Estimated Fare
+                      </p>
+                      <p
+                        className="font-display text-3xl font-bold"
+                        style={{ color: GREEN }}
+                      >
+                        ₹{estimate.low.toLocaleString("en-IN")} – ₹
+                        {estimate.high.toLocaleString("en-IN")}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div
+                    className="rounded-xl p-4 mb-5 space-y-2"
+                    style={{
+                      background: GREEN_TINT,
+                      border: `1px solid ${GREEN_BORDER}`,
+                    }}
+                  >
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                      Breakdown
+                    </p>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Car Type</span>
+                      <span className="font-semibold text-foreground">
+                        {estimate.carType}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Base Rate</span>
+                      <span className="font-semibold text-foreground">
+                        ₹{estimate.base}/hr
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Duration</span>
+                      <span className="font-semibold text-foreground">
+                        {estimate.duration} ({estimate.hours} hr
+                        {estimate.hours > 1 ? "s" : ""})
+                      </span>
+                    </div>
+                    {estimate.multiplier > 1 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">
+                          City Surcharge
+                        </span>
+                        <span className="font-semibold text-foreground">
+                          ×{estimate.multiplier}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <p className="text-xs text-muted-foreground mb-5">
+                    Final price may vary based on traffic and wait time. No
+                    hidden charges.
+                  </p>
+
+                  <Link to="/drivers">
+                    <Button
+                      size="lg"
+                      className="w-full font-semibold rounded-xl text-white"
+                      style={{ background: GREEN }}
+                      data-ocid="estimate.primary_button"
+                    >
+                      Book This Driver →
+                    </Button>
+                  </Link>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="placeholder"
+                  className="rounded-2xl p-10 flex flex-col items-center justify-center text-center"
+                  style={{
+                    background: "white",
+                    border: `2px dashed ${GREEN_BORDER}`,
+                    minHeight: 340,
+                  }}
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                >
+                  <div
+                    className="w-20 h-20 rounded-full flex items-center justify-center mb-5"
+                    style={{
+                      background: GREEN_ICON_BG,
+                      border: `2px solid ${GREEN_BORDER}`,
+                    }}
+                  >
+                    <Calculator
+                      className="w-10 h-10"
+                      style={{ color: GREEN }}
+                    />
+                  </div>
+                  <h3 className="font-display font-bold text-xl text-foreground mb-2">
+                    Your estimate appears here
+                  </h3>
+                  <p className="text-muted-foreground text-sm max-w-xs">
+                    Fill in the form and click "Check Estimate" to see an
+                    instant fare range for your journey.
+                  </p>
+                  <div className="mt-6 flex flex-wrap gap-2 justify-center">
+                    {["Transparent", "No Hidden Charges", "Instant"].map(
+                      (tag) => (
+                        <span
+                          key={tag}
+                          className="text-xs font-semibold px-3 py-1 rounded-full"
+                          style={{
+                            background: GREEN_ICON_BG,
+                            color: GREEN,
+                            border: `1px solid ${GREEN_BORDER}`,
+                          }}
+                        >
+                          ✓ {tag}
+                        </span>
+                      ),
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </div>
           </div>
         </div>
       </section>

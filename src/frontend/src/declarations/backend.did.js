@@ -8,6 +8,17 @@
 
 import { IDL } from '@icp-sdk/core/candid';
 
+export const _CaffeineStorageCreateCertificateResult = IDL.Record({
+  'method' : IDL.Text,
+  'blob_hash' : IDL.Text,
+});
+export const _CaffeineStorageRefillInformation = IDL.Record({
+  'proposed_top_up_amount' : IDL.Opt(IDL.Nat),
+});
+export const _CaffeineStorageRefillResult = IDL.Record({
+  'success' : IDL.Opt(IDL.Bool),
+  'topped_up_amount' : IDL.Opt(IDL.Nat),
+});
 export const UserRole = IDL.Variant({
   'admin' : IDL.Null,
   'user' : IDL.Null,
@@ -34,6 +45,33 @@ export const Booking = IDL.Record({
   'pickupAddress' : IDL.Text,
   'totalPrice' : IDL.Nat,
 });
+export const CustomerProfile = IDL.Record({
+  'id' : IDL.Nat,
+  'name' : IDL.Text,
+  'createdAt' : IDL.Int,
+  'email' : IDL.Text,
+  'mobile' : IDL.Text,
+});
+export const DriverRegistrationStatus = IDL.Variant({
+  'pending' : IDL.Null,
+  'approved' : IDL.Null,
+  'rejected' : IDL.Null,
+});
+export const DriverRegistration = IDL.Record({
+  'id' : IDL.Nat,
+  'status' : DriverRegistrationStatus,
+  'about' : IDL.Text,
+  'applicationId' : IDL.Text,
+  'city' : IDL.Text,
+  'name' : IDL.Text,
+  'createdAt' : IDL.Int,
+  'email' : IDL.Text,
+  'experience' : IDL.Text,
+  'state' : IDL.Text,
+  'licenseNumber' : IDL.Text,
+  'aadhaarNumber' : IDL.Text,
+  'phone' : IDL.Text,
+});
 export const Driver = IDL.Record({
   'id' : IDL.Nat,
   'name' : IDL.Text,
@@ -49,12 +87,52 @@ export const UserProfile = IDL.Record({
   'name' : IDL.Text,
   'phone' : IDL.Text,
 });
-export const DriveEaseInfo = IDL.Record({
-  'drivers' : IDL.Vec(Driver),
-  'adminId' : IDL.Principal,
+export const http_header = IDL.Record({
+  'value' : IDL.Text,
+  'name' : IDL.Text,
+});
+export const http_request_result = IDL.Record({
+  'status' : IDL.Nat,
+  'body' : IDL.Vec(IDL.Nat8),
+  'headers' : IDL.Vec(http_header),
+});
+export const TransformationInput = IDL.Record({
+  'context' : IDL.Vec(IDL.Nat8),
+  'response' : http_request_result,
+});
+export const TransformationOutput = IDL.Record({
+  'status' : IDL.Nat,
+  'body' : IDL.Vec(IDL.Nat8),
+  'headers' : IDL.Vec(http_header),
 });
 
 export const idlService = IDL.Service({
+  '_caffeineStorageBlobIsLive' : IDL.Func(
+      [IDL.Vec(IDL.Nat8)],
+      [IDL.Bool],
+      ['query'],
+    ),
+  '_caffeineStorageBlobsToDelete' : IDL.Func(
+      [],
+      [IDL.Vec(IDL.Vec(IDL.Nat8))],
+      ['query'],
+    ),
+  '_caffeineStorageConfirmBlobDeletion' : IDL.Func(
+      [IDL.Vec(IDL.Vec(IDL.Nat8))],
+      [],
+      [],
+    ),
+  '_caffeineStorageCreateCertificate' : IDL.Func(
+      [IDL.Text],
+      [_CaffeineStorageCreateCertificateResult],
+      [],
+    ),
+  '_caffeineStorageRefillCashier' : IDL.Func(
+      [IDL.Opt(_CaffeineStorageRefillInformation)],
+      [_CaffeineStorageRefillResult],
+      [],
+    ),
+  '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'addDriver' : IDL.Func(
       [
@@ -69,6 +147,7 @@ export const idlService = IDL.Service({
       [IDL.Nat],
       [],
     ),
+  'approveDriverRegistration' : IDL.Func([IDL.Nat], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'createBooking' : IDL.Func(
       [
@@ -86,22 +165,78 @@ export const idlService = IDL.Service({
     ),
   'deleteDriver' : IDL.Func([IDL.Nat], [], []),
   'getAllBookings' : IDL.Func([], [IDL.Vec(Booking)], ['query']),
+  'getAllCustomers' : IDL.Func([], [IDL.Vec(CustomerProfile)], ['query']),
+  'getAllRegistrations' : IDL.Func(
+      [],
+      [IDL.Vec(DriverRegistration)],
+      ['query'],
+    ),
   'getAvailableDrivers' : IDL.Func([], [IDL.Vec(Driver)], ['query']),
   'getBooking' : IDL.Func([IDL.Nat], [IDL.Opt(Booking)], ['query']),
   'getBookingsByPhone' : IDL.Func([IDL.Text], [IDL.Vec(Booking)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+  'getCustomerByEmail' : IDL.Func(
+      [IDL.Text],
+      [IDL.Opt(CustomerProfile)],
+      ['query'],
+    ),
+  'getCustomerByMobile' : IDL.Func(
+      [IDL.Text],
+      [IDL.Opt(CustomerProfile)],
+      ['query'],
+    ),
   'getDriver' : IDL.Func([IDL.Nat], [IDL.Opt(Driver)], ['query']),
+  'getDriverRegistrationByPhone' : IDL.Func(
+      [IDL.Text],
+      [IDL.Opt(DriverRegistration)],
+      ['query'],
+    ),
   'getDrivers' : IDL.Func([], [IDL.Vec(Driver)], ['query']),
-  'getInfo' : IDL.Func([], [DriveEaseInfo], ['query']),
+  'getPendingRegistrations' : IDL.Func(
+      [],
+      [IDL.Vec(DriverRegistration)],
+      ['query'],
+    ),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
       ['query'],
     ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'registerOrLoginByEmail' : IDL.Func(
+      [IDL.Text, IDL.Text],
+      [CustomerProfile],
+      [],
+    ),
+  'registerOrLoginByMobile' : IDL.Func(
+      [IDL.Text, IDL.Text],
+      [CustomerProfile],
+      [],
+    ),
+  'rejectDriverRegistration' : IDL.Func([IDL.Nat], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'seedDrivers' : IDL.Func([], [], []),
+  'submitDriverRegistration' : IDL.Func(
+      [
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+      ],
+      [IDL.Text],
+      [],
+    ),
+  'transform' : IDL.Func(
+      [TransformationInput],
+      [TransformationOutput],
+      ['query'],
+    ),
   'updateBookingStatus' : IDL.Func([IDL.Nat, BookingStatus], [], []),
   'updateDriverAvailability' : IDL.Func([IDL.Nat, IDL.Bool], [], []),
 });
@@ -109,6 +244,17 @@ export const idlService = IDL.Service({
 export const idlInitArgs = [];
 
 export const idlFactory = ({ IDL }) => {
+  const _CaffeineStorageCreateCertificateResult = IDL.Record({
+    'method' : IDL.Text,
+    'blob_hash' : IDL.Text,
+  });
+  const _CaffeineStorageRefillInformation = IDL.Record({
+    'proposed_top_up_amount' : IDL.Opt(IDL.Nat),
+  });
+  const _CaffeineStorageRefillResult = IDL.Record({
+    'success' : IDL.Opt(IDL.Bool),
+    'topped_up_amount' : IDL.Opt(IDL.Nat),
+  });
   const UserRole = IDL.Variant({
     'admin' : IDL.Null,
     'user' : IDL.Null,
@@ -135,6 +281,33 @@ export const idlFactory = ({ IDL }) => {
     'pickupAddress' : IDL.Text,
     'totalPrice' : IDL.Nat,
   });
+  const CustomerProfile = IDL.Record({
+    'id' : IDL.Nat,
+    'name' : IDL.Text,
+    'createdAt' : IDL.Int,
+    'email' : IDL.Text,
+    'mobile' : IDL.Text,
+  });
+  const DriverRegistrationStatus = IDL.Variant({
+    'pending' : IDL.Null,
+    'approved' : IDL.Null,
+    'rejected' : IDL.Null,
+  });
+  const DriverRegistration = IDL.Record({
+    'id' : IDL.Nat,
+    'status' : DriverRegistrationStatus,
+    'about' : IDL.Text,
+    'applicationId' : IDL.Text,
+    'city' : IDL.Text,
+    'name' : IDL.Text,
+    'createdAt' : IDL.Int,
+    'email' : IDL.Text,
+    'experience' : IDL.Text,
+    'state' : IDL.Text,
+    'licenseNumber' : IDL.Text,
+    'aadhaarNumber' : IDL.Text,
+    'phone' : IDL.Text,
+  });
   const Driver = IDL.Record({
     'id' : IDL.Nat,
     'name' : IDL.Text,
@@ -147,12 +320,49 @@ export const idlFactory = ({ IDL }) => {
     'photo' : IDL.Text,
   });
   const UserProfile = IDL.Record({ 'name' : IDL.Text, 'phone' : IDL.Text });
-  const DriveEaseInfo = IDL.Record({
-    'drivers' : IDL.Vec(Driver),
-    'adminId' : IDL.Principal,
+  const http_header = IDL.Record({ 'value' : IDL.Text, 'name' : IDL.Text });
+  const http_request_result = IDL.Record({
+    'status' : IDL.Nat,
+    'body' : IDL.Vec(IDL.Nat8),
+    'headers' : IDL.Vec(http_header),
+  });
+  const TransformationInput = IDL.Record({
+    'context' : IDL.Vec(IDL.Nat8),
+    'response' : http_request_result,
+  });
+  const TransformationOutput = IDL.Record({
+    'status' : IDL.Nat,
+    'body' : IDL.Vec(IDL.Nat8),
+    'headers' : IDL.Vec(http_header),
   });
   
   return IDL.Service({
+    '_caffeineStorageBlobIsLive' : IDL.Func(
+        [IDL.Vec(IDL.Nat8)],
+        [IDL.Bool],
+        ['query'],
+      ),
+    '_caffeineStorageBlobsToDelete' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Vec(IDL.Nat8))],
+        ['query'],
+      ),
+    '_caffeineStorageConfirmBlobDeletion' : IDL.Func(
+        [IDL.Vec(IDL.Vec(IDL.Nat8))],
+        [],
+        [],
+      ),
+    '_caffeineStorageCreateCertificate' : IDL.Func(
+        [IDL.Text],
+        [_CaffeineStorageCreateCertificateResult],
+        [],
+      ),
+    '_caffeineStorageRefillCashier' : IDL.Func(
+        [IDL.Opt(_CaffeineStorageRefillInformation)],
+        [_CaffeineStorageRefillResult],
+        [],
+      ),
+    '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'addDriver' : IDL.Func(
         [
@@ -167,6 +377,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Nat],
         [],
       ),
+    'approveDriverRegistration' : IDL.Func([IDL.Nat], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'createBooking' : IDL.Func(
         [
@@ -184,22 +395,78 @@ export const idlFactory = ({ IDL }) => {
       ),
     'deleteDriver' : IDL.Func([IDL.Nat], [], []),
     'getAllBookings' : IDL.Func([], [IDL.Vec(Booking)], ['query']),
+    'getAllCustomers' : IDL.Func([], [IDL.Vec(CustomerProfile)], ['query']),
+    'getAllRegistrations' : IDL.Func(
+        [],
+        [IDL.Vec(DriverRegistration)],
+        ['query'],
+      ),
     'getAvailableDrivers' : IDL.Func([], [IDL.Vec(Driver)], ['query']),
     'getBooking' : IDL.Func([IDL.Nat], [IDL.Opt(Booking)], ['query']),
     'getBookingsByPhone' : IDL.Func([IDL.Text], [IDL.Vec(Booking)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+    'getCustomerByEmail' : IDL.Func(
+        [IDL.Text],
+        [IDL.Opt(CustomerProfile)],
+        ['query'],
+      ),
+    'getCustomerByMobile' : IDL.Func(
+        [IDL.Text],
+        [IDL.Opt(CustomerProfile)],
+        ['query'],
+      ),
     'getDriver' : IDL.Func([IDL.Nat], [IDL.Opt(Driver)], ['query']),
+    'getDriverRegistrationByPhone' : IDL.Func(
+        [IDL.Text],
+        [IDL.Opt(DriverRegistration)],
+        ['query'],
+      ),
     'getDrivers' : IDL.Func([], [IDL.Vec(Driver)], ['query']),
-    'getInfo' : IDL.Func([], [DriveEaseInfo], ['query']),
+    'getPendingRegistrations' : IDL.Func(
+        [],
+        [IDL.Vec(DriverRegistration)],
+        ['query'],
+      ),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],
         ['query'],
       ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'registerOrLoginByEmail' : IDL.Func(
+        [IDL.Text, IDL.Text],
+        [CustomerProfile],
+        [],
+      ),
+    'registerOrLoginByMobile' : IDL.Func(
+        [IDL.Text, IDL.Text],
+        [CustomerProfile],
+        [],
+      ),
+    'rejectDriverRegistration' : IDL.Func([IDL.Nat], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'seedDrivers' : IDL.Func([], [], []),
+    'submitDriverRegistration' : IDL.Func(
+        [
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+        ],
+        [IDL.Text],
+        [],
+      ),
+    'transform' : IDL.Func(
+        [TransformationInput],
+        [TransformationOutput],
+        ['query'],
+      ),
     'updateBookingStatus' : IDL.Func([IDL.Nat, BookingStatus], [], []),
     'updateDriverAvailability' : IDL.Func([IDL.Nat, IDL.Bool], [], []),
   });

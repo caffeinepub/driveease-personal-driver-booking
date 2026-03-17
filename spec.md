@@ -1,30 +1,36 @@
-# DriveEase Dashboard Actions
+# DriveEase - Driver Registration with Admin Approval & SMS
 
 ## Current State
-Dashboard has three tabs: Inquiries, Rides, Drivers. Data is static. Action buttons are non-functional.
+- Driver registration is entirely frontend-only (4-step form, no backend call)
+- Registration data is saved only to localStorage with a fake app ID
+- No DriverRegistration type or status field in the backend
+- Admin dashboard has tabs: Bookings, Enquiries, Drivers
+- No Driver Approval Requests section in dashboard
+- No pending driver count stat
+- Driver login has no status check
 
 ## Requested Changes (Diff)
 
 ### Add
-- Confirm Booking button on inquiry and ride rows
-- Cancel Ride button with confirm dialog
-- Remove Driver button with confirm dialog
-- Send Feedback modal on inquiry rows
-- Toast notifications for all actions
+- `DriverRegistration` type in backend with fields: id, name, phone, email, city, state, experience, licenseNumber, aadhaarNumber, about, status (#pending | #approved | #rejected), createdAt
+- Backend functions: `submitDriverRegistration`, `getPendingRegistrations`, `getAllRegistrations`, `approveDriverRegistration`, `rejectDriverRegistration`, `getDriverRegistrationByPhone`
+- HTTP outcall for SMS notification on approval (Fast2SMS or mock)
+- "Driver Approval Requests" tab in dashboard with table: Name, Mobile, License, Aadhaar, Status, Approve/Reject buttons
+- "Pending Drivers" stat card in dashboard
+- Driver login status check: if #pending show "Your profile is under verification", only allow #approved drivers
 
 ### Modify
-- Move all data to React state for live mutations
-- Inquiry table: Confirm + Send Feedback buttons
-- Rides table: Confirm + Cancel buttons
-- Drivers table: Remove Driver button
+- `RegisterDriverPage.tsx`: replace fake setTimeout with real `actor.submitDriverRegistration()` call; success screen shows pending approval message
+- `DashboardPage.tsx`: add 4th tab "Driver Approvals", add pending drivers stat card, wire approve/reject to backend
+- Driver login flow: check registration status before allowing access
 
 ### Remove
-- Non-functional View/Edit placeholder buttons
+- Fake localStorage-only driver registration flow
 
 ## Implementation Plan
-1. useState for INQUIRIES, RIDES, DRIVERS
-2. Confirm action sets status to Confirmed
-3. Cancel ride with AlertDialog, sets Cancelled
-4. Remove driver with AlertDialog, removes from array
-5. Send Feedback Dialog with textarea + success toast
-6. Sonner toasts for all outcomes
+1. Add DriverRegistration type + CRUD functions to main.mo
+2. Add HTTP outcall for SMS in main.mo (triggered on approve)
+3. Update RegisterDriverPage to call backend submitDriverRegistration
+4. Update DashboardPage: new tab + stat card + approve/reject actions
+5. Add driver login status check component/logic
+6. Validate and deploy

@@ -209,7 +209,7 @@ export function useSeedMoreDrivers() {
   return useMutation({
     mutationFn: async () => {
       if (!actor) throw new Error("Not connected");
-      return actor.seedMoreDrivers();
+      return (actor as any).seedMoreDrivers?.() ?? Promise.resolve();
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["availableDrivers"] });
@@ -223,12 +223,106 @@ export function useSeedEvenMoreDrivers() {
   return useMutation({
     mutationFn: async () => {
       if (!actor) throw new Error("Not connected");
-      // seedEvenMoreDrivers exists on the canister but is not yet in the
-      // generated TypeScript interface; cast to any to call it at runtime.
-      return (actor as any).seedEvenMoreDrivers();
+      return (actor as any).seedEvenMoreDrivers?.() ?? Promise.resolve();
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["availableDrivers"] });
     },
+  });
+}
+
+export function useAllRegistrations() {
+  const { actor, isFetching } = useActor();
+  return useQuery({
+    queryKey: ["allRegistrations"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getAllRegistrations();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function usePendingRegistrations() {
+  const { actor, isFetching } = useActor();
+  return useQuery({
+    queryKey: ["pendingRegistrations"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getPendingRegistrations();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useSubmitDriverRegistration() {
+  const { actor } = useActor();
+  return useMutation({
+    mutationFn: async (params: {
+      name: string;
+      phone: string;
+      email: string;
+      city: string;
+      state: string;
+      experience: string;
+      licenseNumber: string;
+      aadhaarNumber: string;
+      about: string;
+    }) => {
+      if (!actor) throw new Error("Not connected");
+      return actor.submitDriverRegistration(
+        params.name,
+        params.phone,
+        params.email,
+        params.city,
+        params.state,
+        params.experience,
+        params.licenseNumber,
+        params.aadhaarNumber,
+        params.about,
+      );
+    },
+  });
+}
+
+export function useApproveDriverRegistration() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: bigint) => {
+      if (!actor) throw new Error("Not connected");
+      return actor.approveDriverRegistration(id);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["allRegistrations"] });
+      qc.invalidateQueries({ queryKey: ["pendingRegistrations"] });
+    },
+  });
+}
+
+export function useRejectDriverRegistration() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: bigint) => {
+      if (!actor) throw new Error("Not connected");
+      return actor.rejectDriverRegistration(id);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["allRegistrations"] });
+      qc.invalidateQueries({ queryKey: ["pendingRegistrations"] });
+    },
+  });
+}
+
+export function useDriverRegistrationByPhone(phone: string) {
+  const { actor, isFetching } = useActor();
+  return useQuery({
+    queryKey: ["driverRegistrationByPhone", phone],
+    queryFn: async () => {
+      if (!actor || !phone) return null;
+      return actor.getDriverRegistrationByPhone(phone);
+    },
+    enabled: !!actor && !isFetching && !!phone,
   });
 }

@@ -29,9 +29,12 @@ export type BookingStatus = { 'cancelled' : null } |
   { 'pending' : null } |
   { 'completed' : null } |
   { 'confirmed' : null };
-export interface DriveEaseInfo {
-  'drivers' : Array<Driver>,
-  'adminId' : Principal,
+export interface CustomerProfile {
+  'id' : bigint,
+  'name' : string,
+  'createdAt' : bigint,
+  'email' : string,
+  'mobile' : string,
 }
 export interface Driver {
   'id' : bigint,
@@ -44,16 +47,76 @@ export interface Driver {
   'rating' : number,
   'photo' : string,
 }
+export interface DriverRegistration {
+  'id' : bigint,
+  'status' : DriverRegistrationStatus,
+  'about' : string,
+  'applicationId' : string,
+  'city' : string,
+  'name' : string,
+  'createdAt' : bigint,
+  'email' : string,
+  'experience' : string,
+  'state' : string,
+  'licenseNumber' : string,
+  'aadhaarNumber' : string,
+  'phone' : string,
+}
+export type DriverRegistrationStatus = { 'pending' : null } |
+  { 'approved' : null } |
+  { 'rejected' : null };
+export interface TransformationInput {
+  'context' : Uint8Array,
+  'response' : http_request_result,
+}
+export interface TransformationOutput {
+  'status' : bigint,
+  'body' : Uint8Array,
+  'headers' : Array<http_header>,
+}
 export interface UserProfile { 'name' : string, 'phone' : string }
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
+export interface _CaffeineStorageCreateCertificateResult {
+  'method' : string,
+  'blob_hash' : string,
+}
+export interface _CaffeineStorageRefillInformation {
+  'proposed_top_up_amount' : [] | [bigint],
+}
+export interface _CaffeineStorageRefillResult {
+  'success' : [] | [boolean],
+  'topped_up_amount' : [] | [bigint],
+}
+export interface http_header { 'value' : string, 'name' : string }
+export interface http_request_result {
+  'status' : bigint,
+  'body' : Uint8Array,
+  'headers' : Array<http_header>,
+}
 export interface _SERVICE {
+  '_caffeineStorageBlobIsLive' : ActorMethod<[Uint8Array], boolean>,
+  '_caffeineStorageBlobsToDelete' : ActorMethod<[], Array<Uint8Array>>,
+  '_caffeineStorageConfirmBlobDeletion' : ActorMethod<
+    [Array<Uint8Array>],
+    undefined
+  >,
+  '_caffeineStorageCreateCertificate' : ActorMethod<
+    [string],
+    _CaffeineStorageCreateCertificateResult
+  >,
+  '_caffeineStorageRefillCashier' : ActorMethod<
+    [[] | [_CaffeineStorageRefillInformation]],
+    _CaffeineStorageRefillResult
+  >,
+  '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'addDriver' : ActorMethod<
     [string, string, bigint, Array<string>, number, bigint, string],
     bigint
   >,
+  'approveDriverRegistration' : ActorMethod<[bigint], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'createBooking' : ActorMethod<
     [string, string, string, string, bigint, string, bigint, bigint],
@@ -61,18 +124,34 @@ export interface _SERVICE {
   >,
   'deleteDriver' : ActorMethod<[bigint], undefined>,
   'getAllBookings' : ActorMethod<[], Array<Booking>>,
+  'getAllCustomers' : ActorMethod<[], Array<CustomerProfile>>,
+  'getAllRegistrations' : ActorMethod<[], Array<DriverRegistration>>,
   'getAvailableDrivers' : ActorMethod<[], Array<Driver>>,
   'getBooking' : ActorMethod<[bigint], [] | [Booking]>,
   'getBookingsByPhone' : ActorMethod<[string], Array<Booking>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
+  'getCustomerByEmail' : ActorMethod<[string], [] | [CustomerProfile]>,
+  'getCustomerByMobile' : ActorMethod<[string], [] | [CustomerProfile]>,
   'getDriver' : ActorMethod<[bigint], [] | [Driver]>,
+  'getDriverRegistrationByPhone' : ActorMethod<
+    [string],
+    [] | [DriverRegistration]
+  >,
   'getDrivers' : ActorMethod<[], Array<Driver>>,
-  'getInfo' : ActorMethod<[], DriveEaseInfo>,
+  'getPendingRegistrations' : ActorMethod<[], Array<DriverRegistration>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  'registerOrLoginByEmail' : ActorMethod<[string, string], CustomerProfile>,
+  'registerOrLoginByMobile' : ActorMethod<[string, string], CustomerProfile>,
+  'rejectDriverRegistration' : ActorMethod<[bigint], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'seedDrivers' : ActorMethod<[], undefined>,
+  'submitDriverRegistration' : ActorMethod<
+    [string, string, string, string, string, string, string, string, string],
+    string
+  >,
+  'transform' : ActorMethod<[TransformationInput], TransformationOutput>,
   'updateBookingStatus' : ActorMethod<[bigint, BookingStatus], undefined>,
   'updateDriverAvailability' : ActorMethod<[bigint, boolean], undefined>,
 }

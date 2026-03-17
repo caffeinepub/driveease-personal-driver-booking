@@ -7,11 +7,14 @@ import {
   createRoute,
   createRouter,
 } from "@tanstack/react-router";
+import { useEffect } from "react";
 import Footer from "./components/Footer";
 import Navbar from "./components/Navbar";
+import { useActor } from "./hooks/useActor";
 import BookingPage from "./pages/BookingPage";
 import ConfirmationPage from "./pages/ConfirmationPage";
 import DashboardPage from "./pages/DashboardPage";
+import DriverLoginPage from "./pages/DriverLoginPage";
 import DriversPage from "./pages/DriversPage";
 import LandingPage from "./pages/LandingPage";
 import LiveDriversPage from "./pages/LiveDriversPage";
@@ -21,8 +24,20 @@ import TrackBookingPage from "./pages/TrackBookingPage";
 
 const queryClient = new QueryClient();
 
-const rootRoute = createRootRoute({
-  component: () => (
+function AppShell() {
+  const { actor } = useActor();
+
+  useEffect(() => {
+    if (!actor) return;
+    Promise.all([
+      actor.seedDrivers().catch(() => {}),
+      (actor as any).seedMoreDrivers?.().catch(() => {}),
+      (actor as any).seedEvenMoreDrivers?.().catch(() => {}),
+      (actor as any).seedFinalDrivers?.().catch(() => {}),
+    ]);
+  }, [actor]);
+
+  return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-1">
@@ -31,7 +46,11 @@ const rootRoute = createRootRoute({
       <Footer />
       <Toaster richColors position="top-right" />
     </div>
-  ),
+  );
+}
+
+const rootRoute = createRootRoute({
+  component: AppShell,
 });
 
 const indexRoute = createRoute({
@@ -88,6 +107,12 @@ const subscriptionsRoute = createRoute({
   component: SubscriptionsPage,
 });
 
+const driverLoginRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/driver-login",
+  component: DriverLoginPage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   driversRoute,
@@ -98,6 +123,7 @@ const routeTree = rootRoute.addChildren([
   registerDriverRoute,
   dashboardRoute,
   subscriptionsRoute,
+  driverLoginRoute,
 ]);
 
 const router = createRouter({ routeTree });

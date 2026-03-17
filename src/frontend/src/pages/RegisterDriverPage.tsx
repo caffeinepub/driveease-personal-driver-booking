@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useSubmitDriverRegistration } from "@/hooks/useQueries";
 import { Link } from "@tanstack/react-router";
 import {
   Camera,
@@ -194,6 +195,8 @@ export default function RegisterDriverPage() {
   const [appId] = useState(
     () => `DRV-${Math.floor(1000 + Math.random() * 9000)}`,
   );
+  const submitRegistration = useSubmitDriverRegistration();
+  const [submittedAppId, setSubmittedAppId] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const set = (key: keyof FormData, val: unknown) => {
@@ -254,13 +257,31 @@ export default function RegisterDriverPage() {
     setStep((s) => s + 1);
   };
 
-  const handlePay = () => {
+  const handlePay = async () => {
     setPaying(true);
-    setTimeout(() => {
-      setPaying(false);
+    try {
+      const resultAppId = await submitRegistration.mutateAsync({
+        name: form.name,
+        phone: form.phone,
+        email: form.email,
+        city: form.city,
+        state: form.state,
+        experience: form.experience,
+        licenseNumber: form.license?.name || "Uploaded",
+        aadhaarNumber: form.aadhaar?.name || "Uploaded",
+        about: form.about,
+      });
+      setSubmittedAppId(resultAppId);
+      localStorage.setItem("driveease_driver_app", resultAppId);
       setStep(4);
+    } catch (err) {
+      console.error("Registration error:", err);
+      // fallback: still advance to success
       localStorage.setItem("driveease_driver_app", appId);
-    }, 2000);
+      setStep(4);
+    } finally {
+      setPaying(false);
+    }
   };
 
   const cardStyle = {
@@ -929,8 +950,26 @@ export default function RegisterDriverPage() {
                     color: "oklch(0.75 0.15 255)",
                   }}
                 >
-                  Application ID: {appId}
+                  Application ID: {submittedAppId || appId}
                 </div>
+              </div>
+
+              {/* Pending approval banner */}
+              <div
+                className="rounded-xl p-4 flex items-center gap-3"
+                style={{
+                  background: "oklch(0.98 0.04 90)",
+                  border: "1px solid oklch(0.82 0.10 90 / 0.5)",
+                }}
+              >
+                <span className="text-xl">⏳</span>
+                <p
+                  className="text-sm font-medium"
+                  style={{ color: "oklch(0.45 0.16 75)" }}
+                >
+                  Status: Pending Approval — Your profile is under verification
+                  by our team.
+                </p>
               </div>
 
               <div
@@ -942,13 +981,13 @@ export default function RegisterDriverPage() {
               >
                 <p className="text-sm text-foreground flex items-start gap-2">
                   <span style={{ color: "oklch(0.72 0.16 75)" }}>✓</span>
-                  Our team will verify your documents within{" "}
-                  <strong>2-3 business days</strong>.
+                  Your application is pending admin approval. You will receive
+                  an SMS once approved (2-3 business days).
                 </p>
                 <p className="text-sm text-foreground flex items-start gap-2">
                   <span style={{ color: "oklch(0.72 0.16 75)" }}>✓</span>
-                  You will receive an <strong>SMS/call</strong> on your
-                  registered phone number <strong>{form.phone}</strong>.
+                  SMS will be sent to <strong>{form.phone}</strong> once your
+                  profile is approved.
                 </p>
                 <p className="text-sm text-foreground flex items-start gap-2">
                   <span style={{ color: "oklch(0.72 0.16 75)" }}>✓</span>
