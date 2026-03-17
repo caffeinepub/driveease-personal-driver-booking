@@ -391,7 +391,6 @@ function LiveDriverCard({
       }}
       data-ocid={`live.driver.item.${index}`}
     >
-      {/* Header */}
       <div
         className="px-4 py-3 flex items-center justify-between"
         style={{ borderBottom: "1px solid oklch(0.88 0 0)" }}
@@ -432,8 +431,6 @@ function LiveDriverCard({
           </span>
         </div>
       </div>
-
-      {/* Body */}
       <div className="p-4 space-y-3">
         <div className="flex items-start gap-2">
           <Navigation
@@ -442,7 +439,6 @@ function LiveDriverCard({
           />
           <p className="text-sm text-muted-foreground">{driver.route}</p>
         </div>
-
         <div className="grid grid-cols-3 gap-2">
           <div
             className="rounded-lg p-2 text-center"
@@ -493,7 +489,6 @@ function LiveDriverCard({
             <p className="text-xs text-muted-foreground">Rating</p>
           </div>
         </div>
-
         <div className="flex items-center justify-between">
           <Badge
             className="text-xs"
@@ -509,7 +504,6 @@ function LiveDriverCard({
             {driver.vehicle}
           </span>
         </div>
-
         <div
           className="text-xs px-3 py-1.5 rounded-lg flex items-center gap-2"
           style={{ background: "oklch(1.0 0 0)" }}
@@ -526,8 +520,8 @@ function LiveDriverCard({
 
 export default function LiveDriversPage() {
   const [tick, setTick] = useState(0);
-  const [stateFilter, setStateFilter] = useState("");
-  const [cityFilter, setCityFilter] = useState("");
+  const [stateFilter, setStateFilter] = useState("all");
+  const [cityFilter, setCityFilter] = useState("all");
 
   useEffect(() => {
     const t = setInterval(() => setTick((p) => p + 1), 1000);
@@ -539,21 +533,22 @@ export default function LiveDriversPage() {
   }, []);
 
   const filteredCities = useMemo(() => {
-    const source = stateFilter
-      ? LIVE_DRIVERS.filter((d) => d.state === stateFilter)
-      : LIVE_DRIVERS;
+    const source =
+      stateFilter !== "all"
+        ? LIVE_DRIVERS.filter((d) => d.state === stateFilter)
+        : LIVE_DRIVERS;
     return [...new Set(source.map((d) => d.city))].sort();
   }, [stateFilter]);
 
   const handleStateChange = (value: string) => {
     setStateFilter(value);
-    setCityFilter("");
+    setCityFilter("all");
   };
 
   const visibleDrivers = useMemo(() => {
     return LIVE_DRIVERS.filter((d) => {
-      const matchesState = !stateFilter || d.state === stateFilter;
-      const matchesCity = !cityFilter || d.city === cityFilter;
+      const matchesState = stateFilter === "all" || d.state === stateFilter;
+      const matchesCity = cityFilter === "all" || d.city === cityFilter;
       return matchesState && matchesCity;
     });
   }, [stateFilter, cityFilter]);
@@ -572,7 +567,6 @@ export default function LiveDriversPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        {/* Header */}
         <div className="flex flex-col gap-4 mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
@@ -585,7 +579,7 @@ export default function LiveDriversPage() {
               <p className="text-muted-foreground">
                 {visibleDrivers.length} driver
                 {visibleDrivers.length !== 1 ? "s" : ""} currently active
-                {stateFilter ? ` in ${stateFilter}` : " across India"}
+                {stateFilter !== "all" ? ` in ${stateFilter}` : " across India"}
               </p>
             </div>
             <div
@@ -603,7 +597,6 @@ export default function LiveDriversPage() {
             </div>
           </div>
 
-          {/* Filter Controls */}
           <div className="flex flex-wrap items-center gap-3">
             <MapPin className="w-4 h-4 text-muted-foreground" />
             <Select value={stateFilter} onValueChange={handleStateChange}>
@@ -611,7 +604,7 @@ export default function LiveDriversPage() {
                 <SelectValue placeholder="All States" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All States</SelectItem>
+                <SelectItem value="all">All States</SelectItem>
                 {uniqueStates.map((state) => (
                   <SelectItem key={state} value={state}>
                     {state}
@@ -623,13 +616,13 @@ export default function LiveDriversPage() {
             <Select
               value={cityFilter}
               onValueChange={setCityFilter}
-              disabled={!stateFilter}
+              disabled={stateFilter === "all"}
             >
               <SelectTrigger className="w-40" data-ocid="live.city.select">
                 <SelectValue placeholder="All Cities" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Cities</SelectItem>
+                <SelectItem value="all">All Cities</SelectItem>
                 {filteredCities.map((city) => (
                   <SelectItem key={city} value={city}>
                     {city}
@@ -638,12 +631,12 @@ export default function LiveDriversPage() {
               </SelectContent>
             </Select>
 
-            {(stateFilter || cityFilter) && (
+            {(stateFilter !== "all" || cityFilter !== "all") && (
               <button
                 type="button"
                 onClick={() => {
-                  setStateFilter("");
-                  setCityFilter("");
+                  setStateFilter("all");
+                  setCityFilter("all");
                 }}
                 className="text-sm text-primary underline hover:no-underline"
               >
@@ -653,7 +646,6 @@ export default function LiveDriversPage() {
           </div>
         </div>
 
-        {/* Stats Bar */}
         <div
           className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8 p-4 rounded-xl"
           style={{
@@ -694,7 +686,6 @@ export default function LiveDriversPage() {
           ))}
         </div>
 
-        {/* Driver Grid */}
         {visibleDrivers.length === 0 ? (
           <div
             className="text-center py-24"
@@ -707,8 +698,8 @@ export default function LiveDriversPage() {
             <button
               type="button"
               onClick={() => {
-                setStateFilter("");
-                setCityFilter("");
+                setStateFilter("all");
+                setCityFilter("all");
               }}
               className="mt-4 text-sm text-primary underline hover:no-underline"
             >

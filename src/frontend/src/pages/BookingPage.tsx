@@ -10,22 +10,29 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useNavigate, useParams } from "@tanstack/react-router";
+import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import {
   Calendar,
   Clock,
   Loader2,
+  MapPin,
   Navigation,
   Phone,
   Route,
+  Star,
   Timer,
   User,
+  Users,
 } from "lucide-react";
-import { motion } from "motion/react";
-import { useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import LocationPicker from "../components/LocationPicker";
-import { useCreateBooking, useDriver } from "../hooks/useQueries";
+import {
+  useAvailableDrivers,
+  useCreateBooking,
+  useDriver,
+} from "../hooks/useQueries";
 
 const GREEN = "oklch(0.50 0.18 145)";
 
@@ -46,12 +53,191 @@ function haversineKm(
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+// Approximate city center coordinates for Indian cities/regions
+const CITY_COORDS: {
+  keywords: string[];
+  lat: number;
+  lng: number;
+  label: string;
+}[] = [
+  {
+    keywords: ["delhi", "ncr", "new delhi"],
+    lat: 28.6139,
+    lng: 77.209,
+    label: "Delhi",
+  },
+  {
+    keywords: ["gurgaon", "gurugram"],
+    lat: 28.4595,
+    lng: 77.0266,
+    label: "Gurgaon",
+  },
+  { keywords: ["noida"], lat: 28.5355, lng: 77.391, label: "Noida" },
+  {
+    keywords: ["mumbai", "bombay"],
+    lat: 19.076,
+    lng: 72.8777,
+    label: "Mumbai",
+  },
+  {
+    keywords: ["pune", "hinjewadi", "kothrud"],
+    lat: 18.5204,
+    lng: 73.8567,
+    label: "Pune",
+  },
+  { keywords: ["nagpur"], lat: 21.1458, lng: 79.0882, label: "Nagpur" },
+  { keywords: ["nashik"], lat: 20.0059, lng: 73.7797, label: "Nashik" },
+  { keywords: ["aurangabad"], lat: 19.8762, lng: 75.3433, label: "Aurangabad" },
+  {
+    keywords: ["bangalore", "bengaluru"],
+    lat: 12.9716,
+    lng: 77.5946,
+    label: "Bangalore",
+  },
+  {
+    keywords: ["mysuru", "mysore"],
+    lat: 12.2958,
+    lng: 76.6394,
+    label: "Mysuru",
+  },
+  { keywords: ["hubli"], lat: 15.3647, lng: 75.124, label: "Hubli" },
+  { keywords: ["belgaum"], lat: 15.8497, lng: 74.4977, label: "Belgaum" },
+  {
+    keywords: ["chennai", "madras"],
+    lat: 13.0827,
+    lng: 80.2707,
+    label: "Chennai",
+  },
+  { keywords: ["coimbatore"], lat: 11.0168, lng: 76.9558, label: "Coimbatore" },
+  { keywords: ["madurai"], lat: 9.9252, lng: 78.1198, label: "Madurai" },
+  {
+    keywords: ["trichy", "tiruchirappalli"],
+    lat: 10.7905,
+    lng: 78.7047,
+    label: "Trichy",
+  },
+  {
+    keywords: ["kolkata", "calcutta"],
+    lat: 22.5726,
+    lng: 88.3639,
+    label: "Kolkata",
+  },
+  { keywords: ["darjeeling"], lat: 27.036, lng: 88.2627, label: "Darjeeling" },
+  { keywords: ["siliguri"], lat: 26.7271, lng: 88.3953, label: "Siliguri" },
+  { keywords: ["hyderabad"], lat: 17.385, lng: 78.4867, label: "Hyderabad" },
+  { keywords: ["vijayawada"], lat: 16.5062, lng: 80.648, label: "Vijayawada" },
+  { keywords: ["jaipur"], lat: 26.9124, lng: 75.7873, label: "Jaipur" },
+  { keywords: ["udaipur"], lat: 24.5854, lng: 73.7125, label: "Udaipur" },
+  { keywords: ["jodhpur"], lat: 26.2389, lng: 73.0243, label: "Jodhpur" },
+  { keywords: ["jaisalmer"], lat: 26.9157, lng: 70.9083, label: "Jaisalmer" },
+  { keywords: ["ahmedabad"], lat: 23.0225, lng: 72.5714, label: "Ahmedabad" },
+  { keywords: ["surat"], lat: 21.1702, lng: 72.8311, label: "Surat" },
+  { keywords: ["vadodara"], lat: 22.3072, lng: 73.1812, label: "Vadodara" },
+  { keywords: ["chandigarh"], lat: 30.7333, lng: 76.7794, label: "Chandigarh" },
+  { keywords: ["amritsar"], lat: 31.634, lng: 74.8723, label: "Amritsar" },
+  { keywords: ["ludhiana"], lat: 30.901, lng: 75.8573, label: "Ludhiana" },
+  { keywords: ["lucknow"], lat: 26.8467, lng: 80.9462, label: "Lucknow" },
+  { keywords: ["agra"], lat: 27.1767, lng: 78.0081, label: "Agra" },
+  {
+    keywords: ["varanasi", "banaras"],
+    lat: 25.3176,
+    lng: 82.9739,
+    label: "Varanasi",
+  },
+  { keywords: ["kanpur"], lat: 26.4499, lng: 80.3319, label: "Kanpur" },
+  { keywords: ["bhopal"], lat: 23.2599, lng: 77.4126, label: "Bhopal" },
+  { keywords: ["indore"], lat: 22.7196, lng: 75.8577, label: "Indore" },
+  { keywords: ["gwalior"], lat: 26.2183, lng: 78.1828, label: "Gwalior" },
+  { keywords: ["kochi", "cochin"], lat: 9.9312, lng: 76.2673, label: "Kochi" },
+  {
+    keywords: ["thiruvananthapuram", "trivandrum"],
+    lat: 8.5241,
+    lng: 76.9366,
+    label: "Thiruvananthapuram",
+  },
+  {
+    keywords: ["kozhikode", "calicut"],
+    lat: 11.2588,
+    lng: 75.7804,
+    label: "Kozhikode",
+  },
+  { keywords: ["guwahati"], lat: 26.1445, lng: 91.7362, label: "Guwahati" },
+  { keywords: ["patna"], lat: 25.5941, lng: 85.1376, label: "Patna" },
+  {
+    keywords: ["bhubaneswar"],
+    lat: 20.2961,
+    lng: 85.8245,
+    label: "Bhubaneswar",
+  },
+  { keywords: ["ranchi"], lat: 23.3441, lng: 85.3096, label: "Ranchi" },
+  { keywords: ["raipur"], lat: 21.2514, lng: 81.6296, label: "Raipur" },
+  { keywords: ["dehradun"], lat: 30.3165, lng: 78.0322, label: "Dehradun" },
+  { keywords: ["shimla"], lat: 31.1048, lng: 77.1734, label: "Shimla" },
+  { keywords: ["srinagar"], lat: 34.0837, lng: 74.7973, label: "Srinagar" },
+  { keywords: ["leh", "ladakh"], lat: 34.1526, lng: 77.5771, label: "Leh" },
+  {
+    keywords: ["goa", "panaji", "margao"],
+    lat: 15.2993,
+    lng: 74.124,
+    label: "Goa",
+  },
+  {
+    keywords: ["aizawl", "mizoram"],
+    lat: 23.7307,
+    lng: 92.7173,
+    label: "Aizawl",
+  },
+  {
+    keywords: ["imphal", "manipur"],
+    lat: 24.817,
+    lng: 93.9368,
+    label: "Imphal",
+  },
+  {
+    keywords: ["agartala", "tripura"],
+    lat: 23.8315,
+    lng: 91.2868,
+    label: "Agartala",
+  },
+  {
+    keywords: ["kohima", "nagaland"],
+    lat: 25.6751,
+    lng: 94.1086,
+    label: "Kohima",
+  },
+  {
+    keywords: ["gangtok", "sikkim"],
+    lat: 27.3389,
+    lng: 88.6065,
+    label: "Gangtok",
+  },
+  {
+    keywords: ["manali", "rohtang"],
+    lat: 32.2432,
+    lng: 77.1892,
+    label: "Manali",
+  },
+];
+
+function getDriverCoords(
+  description: string,
+): { lat: number; lng: number; label: string } | null {
+  const lower = description.toLowerCase();
+  for (const entry of CITY_COORDS) {
+    if (entry.keywords.some((k) => lower.includes(k))) {
+      return { lat: entry.lat, lng: entry.lng, label: entry.label };
+    }
+  }
+  return null;
+}
+
 export default function BookingPage() {
   const { driverId } = useParams({ from: "/book/$driverId" });
   const navigate = useNavigate();
   const driverIdBig = BigInt(driverId);
   const { data: driver, isLoading } = useDriver(driverIdBig);
   const createBooking = useCreateBooking();
+  const { data: availableDrivers = [] } = useAvailableDrivers();
 
   const [form, setForm] = useState({
     customerName: "",
@@ -88,6 +274,31 @@ export default function BookingPage() {
           dropLatLng.lng,
         ).toFixed(1)
       : null;
+
+  // Compute nearby drivers when pickup is set
+  const nearbyDrivers = useMemo(() => {
+    if (!pickupLatLng || availableDrivers.length === 0) return [];
+    const withDist = availableDrivers
+      .filter((d) => d.id !== driverIdBig)
+      .map((d) => {
+        const coords = getDriverCoords(d.description);
+        if (!coords) return null;
+        const dist = haversineKm(
+          pickupLatLng.lat,
+          pickupLatLng.lng,
+          coords.lat,
+          coords.lng,
+        );
+        return { driver: d, dist, cityLabel: coords.label };
+      })
+      .filter(Boolean) as {
+      driver: (typeof availableDrivers)[0];
+      dist: number;
+      cityLabel: string;
+    }[];
+    withDist.sort((a, b) => a.dist - b.dist);
+    return withDist.slice(0, 4);
+  }, [pickupLatLng, availableDrivers, driverIdBig]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -262,6 +473,117 @@ export default function BookingPage() {
                 ocidMap="booking.pickup_map"
                 ocidSearch="booking.pickup_search_input"
               />
+
+              {/* Nearby Drivers Section */}
+              <AnimatePresence>
+                {pickupLatLng && nearbyDrivers.length > 0 && (
+                  <motion.div
+                    key="nearby"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.35 }}
+                    className="rounded-xl border border-green-200 bg-green-50 overflow-hidden"
+                    data-ocid="booking.nearby_drivers.panel"
+                  >
+                    <div className="flex items-center gap-2 px-4 py-3 border-b border-green-200 bg-green-100">
+                      <Navigation className="w-4 h-4 text-green-700" />
+                      <span className="font-semibold text-sm text-green-800">
+                        Nearby Available Drivers
+                      </span>
+                      <span className="ml-auto text-xs text-green-600 font-medium">
+                        Close to your pickup
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3">
+                      {nearbyDrivers.map(
+                        ({ driver: nd, dist, cityLabel }, i) => {
+                          const initials = nd.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")
+                            .toUpperCase()
+                            .slice(0, 2);
+                          return (
+                            <motion.div
+                              key={nd.id.toString()}
+                              initial={{ opacity: 0, scale: 0.97 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ delay: i * 0.06 }}
+                              className="flex items-center gap-3 bg-white rounded-lg border border-green-100 p-3 shadow-sm"
+                              data-ocid={`booking.nearby_drivers.item.${i + 1}`}
+                            >
+                              {nd.photo ? (
+                                <img
+                                  src={nd.photo}
+                                  alt={nd.name}
+                                  className="w-11 h-11 rounded-full object-cover shrink-0"
+                                />
+                              ) : (
+                                <div
+                                  className="w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0"
+                                  style={{ background: GREEN }}
+                                >
+                                  {initials}
+                                </div>
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-sm text-gray-900 truncate">
+                                  {nd.name}
+                                </p>
+                                <div className="flex items-center gap-1 mt-0.5">
+                                  <MapPin className="w-3 h-3 text-green-600 shrink-0" />
+                                  <span className="text-xs text-gray-500 truncate">
+                                    {cityLabel}
+                                  </span>
+                                  <span className="text-xs text-gray-400 ml-1">
+                                    ·
+                                  </span>
+                                  <span className="text-xs font-medium text-green-700">
+                                    ~
+                                    {dist < 10
+                                      ? dist.toFixed(1)
+                                      : Math.round(dist)}{" "}
+                                    km
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-1 mt-0.5">
+                                  <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                                  <span className="text-xs text-gray-600">
+                                    {nd.rating.toFixed(1)}
+                                  </span>
+                                  <span className="text-xs text-gray-400 ml-1">
+                                    ·
+                                  </span>
+                                  <span
+                                    className="text-xs font-semibold"
+                                    style={{ color: GREEN }}
+                                  >
+                                    ₹{Number(nd.pricePerHour)}/hr
+                                  </span>
+                                </div>
+                              </div>
+                              <Link
+                                to="/book/$driverId"
+                                params={{ driverId: nd.id.toString() }}
+                                data-ocid={`booking.nearby_drivers.book_button.${i + 1}`}
+                              >
+                                <button
+                                  type="button"
+                                  className="text-xs font-semibold px-3 py-1.5 rounded-full text-white transition-opacity hover:opacity-90 shrink-0"
+                                  style={{ background: GREEN }}
+                                >
+                                  Switch
+                                </button>
+                              </Link>
+                            </motion.div>
+                          );
+                        },
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               <LocationPicker
                 label="Drop-off Location"

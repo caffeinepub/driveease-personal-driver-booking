@@ -22,8 +22,8 @@ export default function DriversPage() {
   const seedMutation = useSeedDrivers();
   const [sort, setSort] = useState("default");
   const [search, setSearch] = useState("");
-  const [stateFilter, setStateFilter] = useState("");
-  const [cityFilter, setCityFilter] = useState("");
+  const [stateFilter, setStateFilter] = useState("all");
+  const [cityFilter, setCityFilter] = useState("all");
   const seeded = useRef(false);
 
   useEffect(() => {
@@ -40,7 +40,6 @@ export default function DriversPage() {
     }
   }, [seedMutation.mutate]);
 
-  // Augment each driver with extracted location
   const driversWithLocation = useMemo(() => {
     return (drivers ?? []).map((d) => ({
       ...d,
@@ -55,9 +54,10 @@ export default function DriversPage() {
   }, [driversWithLocation]);
 
   const filteredCities = useMemo(() => {
-    const source = stateFilter
-      ? driversWithLocation.filter((d) => d._location.state === stateFilter)
-      : driversWithLocation;
+    const source =
+      stateFilter !== "all"
+        ? driversWithLocation.filter((d) => d._location.state === stateFilter)
+        : driversWithLocation;
     return [...new Set(source.map((d) => d._location.city))]
       .filter((c) => c !== "Other")
       .sort();
@@ -65,13 +65,14 @@ export default function DriversPage() {
 
   const handleStateChange = (value: string) => {
     setStateFilter(value);
-    setCityFilter("");
+    setCityFilter("all");
   };
 
   const filtered = driversWithLocation.filter((d) => {
     const matchesName = d.name.toLowerCase().includes(search.toLowerCase());
-    const matchesState = !stateFilter || d._location.state === stateFilter;
-    const matchesCity = !cityFilter || d._location.city === cityFilter;
+    const matchesState =
+      stateFilter === "all" || d._location.state === stateFilter;
+    const matchesCity = cityFilter === "all" || d._location.city === cityFilter;
     return matchesName && matchesState && matchesCity;
   });
 
@@ -125,7 +126,7 @@ export default function DriversPage() {
                   <SelectValue placeholder="All States" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All States</SelectItem>
+                  <SelectItem value="all">All States</SelectItem>
                   {uniqueStates.map((state) => (
                     <SelectItem key={state} value={state}>
                       {state}
@@ -139,13 +140,13 @@ export default function DriversPage() {
             <Select
               value={cityFilter}
               onValueChange={setCityFilter}
-              disabled={!stateFilter}
+              disabled={stateFilter === "all"}
             >
               <SelectTrigger className="w-40" data-ocid="drivers.city.select">
                 <SelectValue placeholder="All Cities" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Cities</SelectItem>
+                <SelectItem value="all">All Cities</SelectItem>
                 {filteredCities.map((city) => (
                   <SelectItem key={city} value={city}>
                     {city}
@@ -189,8 +190,8 @@ export default function DriversPage() {
             <button
               type="button"
               onClick={() => {
-                setStateFilter("");
-                setCityFilter("");
+                setStateFilter("all");
+                setCityFilter("all");
                 setSearch("");
               }}
               className="mt-4 text-sm text-primary underline hover:no-underline"
