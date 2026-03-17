@@ -153,6 +153,7 @@ export interface backendInterface {
     isCallerAdmin(): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     seedDrivers(): Promise<void>;
+    seedMoreDrivers(): Promise<void>;
     updateBookingStatus(id: bigint, status: BookingStatus): Promise<void>;
     updateDriverAvailability(id: bigint, available: boolean): Promise<void>;
 }
@@ -411,7 +412,21 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async updateBookingStatus(arg0: bigint, arg1: BookingStatus): Promise<void> {
+    async seedMoreDrivers(): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.seedMoreDrivers();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.seedMoreDrivers();
+            return result;
+        }
+    }
+        async updateBookingStatus(arg0: bigint, arg1: BookingStatus): Promise<void> {
         if (this.processError) {
             try {
                 const result = await this.actor.updateBookingStatus(arg0, to_candid_BookingStatus_n13(this._uploadFile, this._downloadFile, arg1));

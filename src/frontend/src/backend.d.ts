@@ -70,6 +70,7 @@ export interface backendInterface {
     isCallerAdmin(): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     seedDrivers(): Promise<void>;
+    seedMoreDrivers(): Promise<void>;
     updateBookingStatus(id: bigint, status: BookingStatus): Promise<void>;
     updateDriverAvailability(id: bigint, available: boolean): Promise<void>;
 }

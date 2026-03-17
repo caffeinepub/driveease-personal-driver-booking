@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "@tanstack/react-router";
-import { Phone, Search } from "lucide-react";
+import { AlertCircle, CheckCircle2, Phone, Search } from "lucide-react";
 import { motion } from "motion/react";
 import { useState } from "react";
 import { BookingStatus } from "../backend";
@@ -19,6 +19,52 @@ function StatusBadge({ status }: { status: BookingStatus }) {
     [BookingStatus.cancelled]: "status-cancelled",
   };
   return <Badge className={`border ${map[status]} capitalize`}>{status}</Badge>;
+}
+
+function BookingStatusBanner({ status }: { status: BookingStatus }) {
+  if (status === BookingStatus.confirmed) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.97 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="flex items-start gap-3 rounded-xl border border-green-200 bg-green-50 px-4 py-3 mb-4"
+        data-ocid="track.success_state"
+      >
+        <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 shrink-0" />
+        <div>
+          <p className="font-semibold text-green-800 text-sm">
+            Booking Confirmed by DriveEase!
+          </p>
+          <p className="text-green-700 text-sm mt-0.5">
+            Your driver has been assigned and will be in touch shortly. Thank
+            you for choosing DriveEase.
+          </p>
+        </div>
+      </motion.div>
+    );
+  }
+  if (status === BookingStatus.cancelled) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.97 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 mb-4"
+        data-ocid="track.error_state"
+      >
+        <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 shrink-0" />
+        <div>
+          <p className="font-semibold text-red-700 text-sm">
+            Booking Cancelled
+          </p>
+          <p className="text-red-600 text-sm mt-0.5">
+            This booking has been cancelled. Please contact us to rebook or for
+            further assistance.
+          </p>
+        </div>
+      </motion.div>
+    );
+  }
+  return null;
 }
 
 export default function TrackBookingPage() {
@@ -114,6 +160,7 @@ export default function TrackBookingPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.08 }}
                 >
+                  <BookingStatusBanner status={booking.status} />
                   <Card
                     className="shadow-card hover:shadow-hero transition-shadow"
                     data-ocid={`track.item.${i + 1}`}

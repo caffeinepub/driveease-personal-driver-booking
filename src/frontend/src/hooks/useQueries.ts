@@ -202,3 +202,33 @@ export function useSeedDrivers() {
     },
   });
 }
+
+export function useSeedMoreDrivers() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      if (!actor) throw new Error("Not connected");
+      return actor.seedMoreDrivers();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["availableDrivers"] });
+    },
+  });
+}
+
+export function useSeedEvenMoreDrivers() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      if (!actor) throw new Error("Not connected");
+      // seedEvenMoreDrivers exists on the canister but is not yet in the
+      // generated TypeScript interface; cast to any to call it at runtime.
+      return (actor as any).seedEvenMoreDrivers();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["availableDrivers"] });
+    },
+  });
+}

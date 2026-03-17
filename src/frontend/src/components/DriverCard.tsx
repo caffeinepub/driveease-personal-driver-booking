@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Link } from "@tanstack/react-router";
 import {
   BadgeCheck,
+  Briefcase,
+  Car,
   Clock,
   Globe,
   MapPin,
@@ -16,6 +18,42 @@ const GREEN = "oklch(0.50 0.18 145)";
 interface DriverCardProps {
   driver: Driver;
   index: number;
+}
+
+interface ParsedDetails {
+  vehicle: string | null;
+  specialization: string | null;
+  cleanDescription: string;
+}
+
+function parseDriverDescription(description: string): ParsedDetails {
+  let cleanDescription = description;
+  let vehicle: string | null = null;
+  let specialization: string | null = null;
+
+  const vehicleMatch = description.match(/Vehicle:\s*([^|\n.]+)/i);
+  if (vehicleMatch) {
+    vehicle = vehicleMatch[1].trim();
+    cleanDescription = cleanDescription
+      .replace(/[|]?\s*Vehicle:\s*[^|\n.]+[|]?/i, " ")
+      .trim();
+  }
+
+  const specMatch = description.match(/Specialization:\s*([^|\n.]+)/i);
+  if (specMatch) {
+    specialization = specMatch[1].trim();
+    cleanDescription = cleanDescription
+      .replace(/[|]?\s*Specialization:\s*[^|\n.]+[|]?/i, " ")
+      .trim();
+  }
+
+  // Normalize extra spaces/pipes
+  cleanDescription = cleanDescription
+    .replace(/\s{2,}/g, " ")
+    .replace(/^[|\s]+|[|\s]+$/g, "")
+    .trim();
+
+  return { vehicle, specialization, cleanDescription };
 }
 
 const CITY_KEYWORDS: { keywords: string[]; city: string }[] = [
@@ -195,6 +233,9 @@ export default function DriverCard({ driver, index }: DriverCardProps) {
 
   const stars = [1, 2, 3, 4, 5];
   const city = detectCity(driver.description);
+  const { vehicle, specialization, cleanDescription } = parseDriverDescription(
+    driver.description,
+  );
 
   return (
     <div
@@ -296,7 +337,7 @@ export default function DriverCard({ driver, index }: DriverCardProps) {
         </div>
 
         {/* Trust Chips */}
-        <div className="flex flex-wrap gap-1.5 mb-3">
+        <div className="flex flex-wrap gap-1.5 mb-2">
           <div
             className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium"
             style={{
@@ -321,6 +362,38 @@ export default function DriverCard({ driver, index }: DriverCardProps) {
           </div>
         </div>
 
+        {/* Optional: Vehicle & Specialization chips */}
+        {(vehicle || specialization) && (
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            {vehicle && (
+              <div
+                className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium"
+                style={{
+                  background: "oklch(0.94 0.02 200)",
+                  color: "oklch(0.35 0.12 200)",
+                  border: "1px solid oklch(0.85 0.05 200)",
+                }}
+              >
+                <Car className="w-3 h-3" />
+                {vehicle}
+              </div>
+            )}
+            {specialization && (
+              <div
+                className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium"
+                style={{
+                  background: "oklch(0.95 0.02 260)",
+                  color: "oklch(0.38 0.14 260)",
+                  border: "1px solid oklch(0.86 0.06 260)",
+                }}
+              >
+                <Briefcase className="w-3 h-3" />
+                {specialization}
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="flex flex-wrap gap-2 mb-3">
           <div className="flex items-center gap-1 text-sm text-muted-foreground">
             <Clock className="w-3.5 h-3.5" />
@@ -333,7 +406,7 @@ export default function DriverCard({ driver, index }: DriverCardProps) {
         </div>
 
         <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-          {driver.description}
+          {cleanDescription}
         </p>
 
         <div className="flex items-center justify-between">

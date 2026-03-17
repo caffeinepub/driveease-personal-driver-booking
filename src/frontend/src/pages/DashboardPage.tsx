@@ -1,3 +1,4 @@
+import type { BookingStatus } from "@/backend";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,6 +19,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -29,6 +31,12 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  useAllBookings,
+  useAllDrivers,
+  useDeleteDriver,
+  useUpdateBookingStatus,
+} from "@/hooks/useQueries";
+import {
   Car,
   Download,
   Eye,
@@ -36,11 +44,15 @@ import {
   LayoutDashboard,
   Lock,
   LogOut,
+  MessageSquare,
+  Phone,
   Search,
   TrendingUp,
   Users,
+  X,
 } from "lucide-react";
-import { useState } from "react";
+import type React from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 
 const GREEN = "oklch(0.50 0.18 145)";
@@ -48,687 +60,43 @@ const ADMIN_PASSWORD = "126312";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
-type InquiryStatus = "Pending" | "Confirmed" | "Completed" | "Cancelled";
+type StatusBadgeType =
+  | "pending"
+  | "confirmed"
+  | "completed"
+  | "cancelled"
+  | "Pending"
+  | "Confirmed"
+  | "Completed"
+  | "Cancelled";
 
-interface Inquiry {
+interface LocalEnquiry {
   id: number;
   name: string;
   phone: string;
-  bookingId: string;
-  pickup: string;
-  dropoff: string;
-  date: string;
-  status: InquiryStatus;
-}
-
-interface Ride {
-  id: string;
-  driver: string;
-  customer: string;
-  pickup: string;
-  dropoff: string;
-  distance: string;
-  duration: string;
-  amount: number;
-  status: InquiryStatus;
-}
-
-interface Driver {
-  id: number;
-  name: string;
   city: string;
-  state: string;
-  rating: number;
-  trips: number;
-  available: boolean;
-  price: number;
+  plan: string;
+  message: string;
+  date: string;
+  status: "Pending" | "Confirmed";
+  feedback?: string;
 }
-
-// ─── Initial Data ──────────────────────────────────────────────────────────────
-
-const INITIAL_INQUIRIES: Inquiry[] = [
-  {
-    id: 1,
-    name: "Arjun Sharma",
-    phone: "9876543210",
-    bookingId: "BK-1001",
-    pickup: "Connaught Place, Delhi",
-    dropoff: "IGI Airport, Delhi",
-    date: "2026-03-01",
-    status: "Completed",
-  },
-  {
-    id: 2,
-    name: "Priya Mehta",
-    phone: "9123456780",
-    bookingId: "BK-1002",
-    pickup: "Bandra, Mumbai",
-    dropoff: "Andheri East, Mumbai",
-    date: "2026-03-02",
-    status: "Confirmed",
-  },
-  {
-    id: 3,
-    name: "Rahul Verma",
-    phone: "9988776655",
-    bookingId: "BK-1003",
-    pickup: "MG Road, Bangalore",
-    dropoff: "Whitefield, Bangalore",
-    date: "2026-03-03",
-    status: "Pending",
-  },
-  {
-    id: 4,
-    name: "Sneha Patel",
-    phone: "9001234567",
-    bookingId: "BK-1004",
-    pickup: "Anna Nagar, Chennai",
-    dropoff: "Chennai Airport",
-    date: "2026-03-04",
-    status: "Completed",
-  },
-  {
-    id: 5,
-    name: "Vikram Singh",
-    phone: "8765432109",
-    bookingId: "BK-1005",
-    pickup: "Park Street, Kolkata",
-    dropoff: "Howrah Station",
-    date: "2026-03-05",
-    status: "Cancelled",
-  },
-  {
-    id: 6,
-    name: "Ananya Reddy",
-    phone: "7654321098",
-    bookingId: "BK-1006",
-    pickup: "Jubilee Hills, Hyderabad",
-    dropoff: "Hyderabad Airport",
-    date: "2026-03-06",
-    status: "Confirmed",
-  },
-  {
-    id: 7,
-    name: "Karan Joshi",
-    phone: "6543210987",
-    bookingId: "BK-1007",
-    pickup: "C-Scheme, Jaipur",
-    dropoff: "Jaipur Airport",
-    date: "2026-03-07",
-    status: "Pending",
-  },
-  {
-    id: 8,
-    name: "Pooja Nair",
-    phone: "9871234560",
-    bookingId: "BK-1008",
-    pickup: "Marine Drive, Kochi",
-    dropoff: "Ernakulam Junction",
-    date: "2026-03-08",
-    status: "Completed",
-  },
-  {
-    id: 9,
-    name: "Deepak Kumar",
-    phone: "9000123456",
-    bookingId: "BK-1009",
-    pickup: "Hazratganj, Lucknow",
-    dropoff: "Lucknow Airport",
-    date: "2026-03-09",
-    status: "Confirmed",
-  },
-  {
-    id: 10,
-    name: "Meera Iyer",
-    phone: "8900012345",
-    bookingId: "BK-1010",
-    pickup: "Koregaon Park, Pune",
-    dropoff: "Pune Airport",
-    date: "2026-03-10",
-    status: "Pending",
-  },
-  {
-    id: 11,
-    name: "Suresh Yadav",
-    phone: "8800012300",
-    bookingId: "BK-1011",
-    pickup: "Sector 17, Chandigarh",
-    dropoff: "Chandigarh Airport",
-    date: "2026-03-11",
-    status: "Completed",
-  },
-  {
-    id: 12,
-    name: "Lakshmi Pillai",
-    phone: "8700012299",
-    bookingId: "BK-1012",
-    pickup: "Lal Darwaja, Ahmedabad",
-    dropoff: "Ahmedabad Airport",
-    date: "2026-03-12",
-    status: "Cancelled",
-  },
-  {
-    id: 13,
-    name: "Manish Gupta",
-    phone: "8600012198",
-    bookingId: "BK-1013",
-    pickup: "Civil Lines, Nagpur",
-    dropoff: "Nagpur Airport",
-    date: "2026-03-13",
-    status: "Confirmed",
-  },
-  {
-    id: 14,
-    name: "Ritika Kapoor",
-    phone: "8500012097",
-    bookingId: "BK-1014",
-    pickup: "Sector 62, Noida",
-    dropoff: "Greater Noida",
-    date: "2026-03-14",
-    status: "Pending",
-  },
-  {
-    id: 15,
-    name: "Anil Tiwari",
-    phone: "8400011996",
-    bookingId: "BK-1015",
-    pickup: "Vijay Nagar, Indore",
-    dropoff: "Indore Airport",
-    date: "2026-03-15",
-    status: "Completed",
-  },
-  {
-    id: 16,
-    name: "Geeta Mishra",
-    phone: "8300011895",
-    bookingId: "BK-1016",
-    pickup: "Boring Road, Patna",
-    dropoff: "Patna Junction",
-    date: "2026-03-16",
-    status: "Confirmed",
-  },
-  {
-    id: 17,
-    name: "Rohit Saxena",
-    phone: "8200011794",
-    bookingId: "BK-1017",
-    pickup: "Lal Bagh, Lucknow",
-    dropoff: "Lucknow Junction",
-    date: "2026-03-16",
-    status: "Pending",
-  },
-  {
-    id: 18,
-    name: "Divya Choudhary",
-    phone: "8100011693",
-    bookingId: "BK-1018",
-    pickup: "Indiranagar, Bangalore",
-    dropoff: "Electronic City",
-    date: "2026-03-17",
-    status: "Cancelled",
-  },
-  {
-    id: 19,
-    name: "Harsh Agarwal",
-    phone: "9900011592",
-    bookingId: "BK-1019",
-    pickup: "Salt Lake, Kolkata",
-    dropoff: "Kolkata Airport",
-    date: "2026-03-17",
-    status: "Completed",
-  },
-  {
-    id: 20,
-    name: "Neha Pandey",
-    phone: "9800011491",
-    bookingId: "BK-1020",
-    pickup: "Gomti Nagar, Lucknow",
-    dropoff: "Lucknow Airport",
-    date: "2026-03-17",
-    status: "Confirmed",
-  },
-];
-
-const INITIAL_RIDES: Ride[] = [
-  {
-    id: "RD-2001",
-    driver: "Rajesh Kumar",
-    customer: "Arjun Sharma",
-    pickup: "Connaught Place, Delhi",
-    dropoff: "IGI Airport",
-    distance: "28 km",
-    duration: "52 min",
-    amount: 850,
-    status: "Completed",
-  },
-  {
-    id: "RD-2002",
-    driver: "Sunil Tiwari",
-    customer: "Priya Mehta",
-    pickup: "Bandra West",
-    dropoff: "Andheri East",
-    distance: "12 km",
-    duration: "35 min",
-    amount: 420,
-    status: "Confirmed",
-  },
-  {
-    id: "RD-2003",
-    driver: "Manoj Prasad",
-    customer: "Rahul Verma",
-    pickup: "MG Road",
-    dropoff: "Whitefield",
-    distance: "18 km",
-    duration: "45 min",
-    amount: 620,
-    status: "Pending",
-  },
-  {
-    id: "RD-2004",
-    driver: "Venkat Rao",
-    customer: "Sneha Patel",
-    pickup: "Anna Nagar",
-    dropoff: "Chennai Airport",
-    distance: "22 km",
-    duration: "40 min",
-    amount: 700,
-    status: "Completed",
-  },
-  {
-    id: "RD-2005",
-    driver: "Arun Ghosh",
-    customer: "Vikram Singh",
-    pickup: "Park Street",
-    dropoff: "Howrah Station",
-    distance: "8 km",
-    duration: "25 min",
-    amount: 310,
-    status: "Cancelled",
-  },
-  {
-    id: "RD-2006",
-    driver: "Sanjay Reddy",
-    customer: "Ananya Reddy",
-    pickup: "Jubilee Hills",
-    dropoff: "Hyderabad Airport",
-    distance: "30 km",
-    duration: "55 min",
-    amount: 920,
-    status: "Confirmed",
-  },
-  {
-    id: "RD-2007",
-    driver: "Pankaj Sharma",
-    customer: "Karan Joshi",
-    pickup: "C-Scheme",
-    dropoff: "Jaipur Airport",
-    distance: "15 km",
-    duration: "30 min",
-    amount: 480,
-    status: "Pending",
-  },
-  {
-    id: "RD-2008",
-    driver: "Thomas Mathew",
-    customer: "Pooja Nair",
-    pickup: "Marine Drive",
-    dropoff: "Ernakulam Junction",
-    distance: "10 km",
-    duration: "28 min",
-    amount: 350,
-    status: "Completed",
-  },
-  {
-    id: "RD-2009",
-    driver: "Ramesh Singh",
-    customer: "Deepak Kumar",
-    pickup: "Hazratganj",
-    dropoff: "Lucknow Airport",
-    distance: "20 km",
-    duration: "38 min",
-    amount: 640,
-    status: "Confirmed",
-  },
-  {
-    id: "RD-2010",
-    driver: "Nitin Patil",
-    customer: "Meera Iyer",
-    pickup: "Koregaon Park",
-    dropoff: "Pune Airport",
-    distance: "17 km",
-    duration: "35 min",
-    amount: 550,
-    status: "Pending",
-  },
-  {
-    id: "RD-2011",
-    driver: "Harpreet Singh",
-    customer: "Suresh Yadav",
-    pickup: "Sector 17",
-    dropoff: "Chandigarh Airport",
-    distance: "12 km",
-    duration: "22 min",
-    amount: 390,
-    status: "Completed",
-  },
-  {
-    id: "RD-2012",
-    driver: "Dilip Patel",
-    customer: "Lakshmi Pillai",
-    pickup: "Lal Darwaja",
-    dropoff: "Ahmedabad Airport",
-    distance: "25 km",
-    duration: "45 min",
-    amount: 790,
-    status: "Cancelled",
-  },
-  {
-    id: "RD-2013",
-    driver: "Gaurav Desai",
-    customer: "Manish Gupta",
-    pickup: "Civil Lines",
-    dropoff: "Nagpur Airport",
-    distance: "14 km",
-    duration: "28 min",
-    amount: 460,
-    status: "Confirmed",
-  },
-  {
-    id: "RD-2014",
-    driver: "Ravi Malhotra",
-    customer: "Ritika Kapoor",
-    pickup: "Sector 62",
-    dropoff: "Greater Noida",
-    distance: "16 km",
-    duration: "32 min",
-    amount: 510,
-    status: "Pending",
-  },
-  {
-    id: "RD-2015",
-    driver: "Ajay Shukla",
-    customer: "Anil Tiwari",
-    pickup: "Vijay Nagar",
-    dropoff: "Indore Airport",
-    distance: "11 km",
-    duration: "24 min",
-    amount: 360,
-    status: "Completed",
-  },
-  {
-    id: "RD-2016",
-    driver: "Brijesh Yadav",
-    customer: "Geeta Mishra",
-    pickup: "Boring Road",
-    dropoff: "Patna Junction",
-    distance: "9 km",
-    duration: "20 min",
-    amount: 290,
-    status: "Confirmed",
-  },
-  {
-    id: "RD-2017",
-    driver: "Amit Chauhan",
-    customer: "Rohit Saxena",
-    pickup: "Lal Bagh",
-    dropoff: "Lucknow Junction",
-    distance: "7 km",
-    duration: "18 min",
-    amount: 250,
-    status: "Pending",
-  },
-  {
-    id: "RD-2018",
-    driver: "Naresh Gowda",
-    customer: "Divya Choudhary",
-    pickup: "Indiranagar",
-    dropoff: "Electronic City",
-    distance: "21 km",
-    duration: "40 min",
-    amount: 670,
-    status: "Cancelled",
-  },
-  {
-    id: "RD-2019",
-    driver: "Bijoy Das",
-    customer: "Harsh Agarwal",
-    pickup: "Salt Lake",
-    dropoff: "Kolkata Airport",
-    distance: "23 km",
-    duration: "42 min",
-    amount: 730,
-    status: "Completed",
-  },
-  {
-    id: "RD-2020",
-    driver: "Sandeep Mishra",
-    customer: "Neha Pandey",
-    pickup: "Gomti Nagar",
-    dropoff: "Lucknow Airport",
-    distance: "19 km",
-    duration: "36 min",
-    amount: 600,
-    status: "Confirmed",
-  },
-];
-
-const INITIAL_DRIVERS: Driver[] = [
-  {
-    id: 1,
-    name: "Rajesh Kumar",
-    city: "Delhi",
-    state: "Delhi",
-    rating: 4.9,
-    trips: 312,
-    available: true,
-    price: 180,
-  },
-  {
-    id: 2,
-    name: "Sunil Tiwari",
-    city: "Mumbai",
-    state: "Maharashtra",
-    rating: 4.8,
-    trips: 278,
-    available: true,
-    price: 200,
-  },
-  {
-    id: 3,
-    name: "Manoj Prasad",
-    city: "Bangalore",
-    state: "Karnataka",
-    rating: 4.7,
-    trips: 245,
-    available: false,
-    price: 190,
-  },
-  {
-    id: 4,
-    name: "Venkat Rao",
-    city: "Chennai",
-    state: "Tamil Nadu",
-    rating: 4.9,
-    trips: 301,
-    available: true,
-    price: 175,
-  },
-  {
-    id: 5,
-    name: "Arun Ghosh",
-    city: "Kolkata",
-    state: "West Bengal",
-    rating: 4.6,
-    trips: 198,
-    available: true,
-    price: 160,
-  },
-  {
-    id: 6,
-    name: "Sanjay Reddy",
-    city: "Hyderabad",
-    state: "Telangana",
-    rating: 4.8,
-    trips: 267,
-    available: false,
-    price: 185,
-  },
-  {
-    id: 7,
-    name: "Pankaj Sharma",
-    city: "Jaipur",
-    state: "Rajasthan",
-    rating: 4.7,
-    trips: 189,
-    available: true,
-    price: 155,
-  },
-  {
-    id: 8,
-    name: "Thomas Mathew",
-    city: "Kochi",
-    state: "Kerala",
-    rating: 4.9,
-    trips: 334,
-    available: true,
-    price: 170,
-  },
-  {
-    id: 9,
-    name: "Ramesh Singh",
-    city: "Lucknow",
-    state: "Uttar Pradesh",
-    rating: 4.6,
-    trips: 210,
-    available: true,
-    price: 150,
-  },
-  {
-    id: 10,
-    name: "Nitin Patil",
-    city: "Pune",
-    state: "Maharashtra",
-    rating: 4.7,
-    trips: 256,
-    available: false,
-    price: 195,
-  },
-  {
-    id: 11,
-    name: "Harpreet Singh",
-    city: "Chandigarh",
-    state: "Punjab",
-    rating: 4.8,
-    trips: 223,
-    available: true,
-    price: 165,
-  },
-  {
-    id: 12,
-    name: "Dilip Patel",
-    city: "Ahmedabad",
-    state: "Gujarat",
-    rating: 4.5,
-    trips: 178,
-    available: true,
-    price: 160,
-  },
-  {
-    id: 13,
-    name: "Gaurav Desai",
-    city: "Nagpur",
-    state: "Maharashtra",
-    rating: 4.6,
-    trips: 192,
-    available: false,
-    price: 155,
-  },
-  {
-    id: 14,
-    name: "Ravi Malhotra",
-    city: "Noida",
-    state: "Uttar Pradesh",
-    rating: 4.7,
-    trips: 234,
-    available: true,
-    price: 175,
-  },
-  {
-    id: 15,
-    name: "Ajay Shukla",
-    city: "Indore",
-    state: "Madhya Pradesh",
-    rating: 4.8,
-    trips: 201,
-    available: true,
-    price: 150,
-  },
-  {
-    id: 16,
-    name: "Brijesh Yadav",
-    city: "Patna",
-    state: "Bihar",
-    rating: 4.5,
-    trips: 165,
-    available: false,
-    price: 140,
-  },
-  {
-    id: 17,
-    name: "Amit Chauhan",
-    city: "Lucknow",
-    state: "Uttar Pradesh",
-    rating: 4.6,
-    trips: 187,
-    available: true,
-    price: 148,
-  },
-  {
-    id: 18,
-    name: "Naresh Gowda",
-    city: "Bangalore",
-    state: "Karnataka",
-    rating: 4.8,
-    trips: 289,
-    available: true,
-    price: 192,
-  },
-  {
-    id: 19,
-    name: "Bijoy Das",
-    city: "Kolkata",
-    state: "West Bengal",
-    rating: 4.7,
-    trips: 214,
-    available: false,
-    price: 158,
-  },
-  {
-    id: 20,
-    name: "Sandeep Mishra",
-    city: "Lucknow",
-    state: "Uttar Pradesh",
-    rating: 4.9,
-    trips: 320,
-    available: true,
-    price: 162,
-  },
-];
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
-function statusBadge(status: InquiryStatus) {
-  const map: Record<InquiryStatus, string> = {
-    Pending: "bg-yellow-50 text-yellow-700 border border-yellow-300",
-    Confirmed: "bg-blue-50 text-blue-700 border border-blue-300",
-    Completed: "bg-green-50 text-green-700 border border-green-300",
-    Cancelled: "bg-red-50 text-red-700 border border-red-300",
+function statusBadge(status: StatusBadgeType) {
+  const s = status.toLowerCase();
+  const map: Record<string, string> = {
+    pending: "bg-yellow-50 text-yellow-700 border border-yellow-300",
+    confirmed: "bg-blue-50 text-blue-700 border border-blue-300",
+    completed: "bg-green-50 text-green-700 border border-green-300",
+    cancelled: "bg-red-50 text-red-700 border border-red-300",
   };
   return (
     <span
-      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${map[status]}`}
+      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${map[s] || map.pending}`}
     >
-      {status}
+      {status.charAt(0).toUpperCase() + status.slice(1)}
     </span>
   );
 }
@@ -744,6 +112,26 @@ function downloadCSV(headers: string[], rows: string[][], filename: string) {
   a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+function SkeletonRow({ cols }: { cols: number }) {
+  const cells: React.ReactNode[] = [];
+  for (let j = 0; j < cols; j++) {
+    cells.push(
+      <TableCell key={`c${j}`}>
+        <Skeleton className="h-4 w-full" />
+      </TableCell>,
+    );
+  }
+  return <TableRow>{cells}</TableRow>;
+}
+
+function TableSkeleton({ cols, rows = 5 }: { cols: number; rows?: number }) {
+  const rowEls: React.ReactNode[] = [];
+  for (let i = 0; i < rows; i++) {
+    rowEls.push(<SkeletonRow key={`r${i}`} cols={cols} />);
+  }
+  return <>{rowEls}</>;
 }
 
 // ─── Stat Card ─────────────────────────────────────────────────────────────────
@@ -873,115 +261,350 @@ function AdminLogin({ onLogin }: { onLogin: () => void }) {
   );
 }
 
+// ─── Phone Lookup Panel ────────────────────────────────────────────────────────
+
+function PhoneLookup({
+  bookings,
+}: {
+  bookings: Array<{
+    id: bigint;
+    customerName: string;
+    customerPhone: string;
+    pickupAddress: string;
+    destination: string;
+    date: bigint;
+    durationHours: bigint;
+    totalPrice: bigint;
+    status: string;
+  }>;
+}) {
+  const [query, setQuery] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const results =
+    query.trim().length >= 3
+      ? bookings.filter((b) =>
+          b.customerPhone.replace(/\D/g, "").includes(query.replace(/\D/g, "")),
+        )
+      : [];
+
+  const searched = query.trim().length >= 3;
+
+  return (
+    <Card className="shadow-sm border-2" style={{ borderColor: `${GREEN}40` }}>
+      <CardHeader className="pb-3">
+        <div className="flex items-center gap-2.5">
+          <div
+            className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+            style={{ background: GREEN }}
+          >
+            <Phone className="w-4 h-4 text-white" />
+          </div>
+          <div>
+            <CardTitle className="text-base font-semibold">
+              Customer Phone Lookup
+            </CardTitle>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Search any booking instantly by mobile number
+            </p>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="relative">
+          <Phone className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            ref={inputRef}
+            type="tel"
+            placeholder="Enter mobile number (e.g. 9876543210)"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="pl-9 pr-9 h-10 bg-white text-base tracking-wide"
+            data-ocid="dashboard.phone_lookup.input"
+          />
+          {query && (
+            <button
+              type="button"
+              className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
+              onClick={() => {
+                setQuery("");
+                inputRef.current?.focus();
+              }}
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+
+        {searched && (
+          <div>
+            {results.length === 0 ? (
+              <div
+                className="text-center py-6 rounded-lg"
+                style={{ background: "oklch(0.97 0.02 145)" }}
+                data-ocid="dashboard.phone_lookup.no_results"
+              >
+                <Phone className="w-8 h-8 mx-auto mb-2 text-muted-foreground opacity-50" />
+                <p className="text-sm font-medium text-muted-foreground">
+                  No bookings found for this number
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Try a different mobile number
+                </p>
+              </div>
+            ) : (
+              <div
+                className="space-y-2"
+                data-ocid="dashboard.phone_lookup.results"
+              >
+                <p className="text-xs font-medium text-muted-foreground">
+                  {results.length} booking{results.length !== 1 ? "s" : ""}{" "}
+                  found
+                </p>
+                {results.map((b) => (
+                  <div
+                    key={String(b.id)}
+                    className="rounded-lg border bg-white p-4 space-y-3"
+                    data-ocid={`dashboard.phone_lookup.result.${b.id}`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="font-semibold text-foreground">
+                          {b.customerName}
+                        </p>
+                        <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
+                          <Phone className="w-3 h-3" />
+                          {b.customerPhone}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        {statusBadge(b.status as StatusBadgeType)}
+                        <span className="text-xs font-mono font-semibold text-green-700">
+                          BK-{String(b.id)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                      <div>
+                        <p className="text-muted-foreground font-medium">
+                          Pickup
+                        </p>
+                        <p className="text-foreground mt-0.5 line-clamp-2">
+                          {b.pickupAddress}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground font-medium">
+                          Destination
+                        </p>
+                        <p className="text-foreground mt-0.5 line-clamp-2">
+                          {b.destination}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground font-medium">
+                          Date
+                        </p>
+                        <p className="text-foreground mt-0.5">
+                          {new Date(Number(b.date)).toLocaleDateString("en-IN")}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground font-medium">
+                          Amount
+                        </p>
+                        <p className="text-foreground font-semibold mt-0.5">
+                          ₹{Number(b.totalPrice).toLocaleString("en-IN")}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {!searched && (
+          <p className="text-xs text-muted-foreground text-center pb-1">
+            Type at least 3 digits to search
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 // ─── Dashboard Page ────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
   const [authenticated, setAuthenticated] = useState(false);
 
-  // Mutable state for all data
-  const [inquiries, setInquiries] = useState<Inquiry[]>(INITIAL_INQUIRIES);
-  const [rides, setRides] = useState<Ride[]>(INITIAL_RIDES);
-  const [drivers, setDrivers] = useState<Driver[]>(INITIAL_DRIVERS);
+  // Backend queries
+  const {
+    data: bookings,
+    isLoading: bookingsLoading,
+    refetch: refetchBookings,
+  } = useAllBookings();
+  const {
+    data: drivers,
+    isLoading: driversLoading,
+    refetch: refetchDrivers,
+  } = useAllDrivers();
+
+  // Backend mutations
+  const updateStatus = useUpdateBookingStatus();
+  const deleteDriverMutation = useDeleteDriver();
+
+  // Enquiries from localStorage (subscription form submissions)
+  const [enquiries, setEnquiries] = useState<LocalEnquiry[]>(() =>
+    JSON.parse(localStorage.getItem("driveease_enquiries") || "[]"),
+  );
 
   // Search state
-  const [inquirySearch, setInquirySearch] = useState("");
-  const [rideSearch, setRideSearch] = useState("");
+  const [bookingSearch, setBookingSearch] = useState("");
   const [driverSearch, setDriverSearch] = useState("");
+  const [enquirySearch, setEnquirySearch] = useState("");
 
   // Feedback dialog state
   const [feedbackOpen, setFeedbackOpen] = useState(false);
-  const [feedbackTarget, setFeedbackTarget] = useState<Inquiry | null>(null);
+  const [feedbackTarget, setFeedbackTarget] = useState<LocalEnquiry | null>(
+    null,
+  );
   const [feedbackText, setFeedbackText] = useState("");
 
-  // Cancel ride dialog state
-  const [cancelRideOpen, setCancelRideOpen] = useState(false);
-  const [cancelRideTarget, setCancelRideTarget] = useState<Ride | null>(null);
+  // Cancel booking dialog state
+  const [cancelBookingOpen, setCancelBookingOpen] = useState(false);
+  const [cancelBookingId, setCancelBookingId] = useState<bigint | null>(null);
 
   // Remove driver dialog state
   const [removeDriverOpen, setRemoveDriverOpen] = useState(false);
-  const [removeDriverTarget, setRemoveDriverTarget] = useState<Driver | null>(
-    null,
-  );
+  const [removeDriverTarget, setRemoveDriverTarget] = useState<{
+    id: bigint;
+    name: string;
+  } | null>(null);
 
   if (!authenticated) {
     return <AdminLogin onLogin={() => setAuthenticated(true)} />;
   }
 
   // ── Filtered lists ──────────────────────────────────────────────────────────
-  const filteredInquiries = inquiries.filter(
-    (i) =>
-      i.name.toLowerCase().includes(inquirySearch.toLowerCase()) ||
-      i.phone.includes(inquirySearch),
+  const filteredBookings = (bookings || []).filter(
+    (b) =>
+      b.customerName.toLowerCase().includes(bookingSearch.toLowerCase()) ||
+      b.customerPhone.includes(bookingSearch) ||
+      `BK-${b.id}`.toLowerCase().includes(bookingSearch.toLowerCase()),
   );
-  const filteredRides = rides.filter(
-    (r) =>
-      r.id.toLowerCase().includes(rideSearch.toLowerCase()) ||
-      r.driver.toLowerCase().includes(rideSearch.toLowerCase()),
+
+  const filteredDrivers = (drivers || []).filter((d) =>
+    d.name.toLowerCase().includes(driverSearch.toLowerCase()),
   );
-  const filteredDrivers = drivers.filter(
-    (d) =>
-      d.name.toLowerCase().includes(driverSearch.toLowerCase()) ||
-      d.city.toLowerCase().includes(driverSearch.toLowerCase()),
+
+  const filteredEnquiries = enquiries.filter(
+    (e) =>
+      e.name.toLowerCase().includes(enquirySearch.toLowerCase()) ||
+      e.phone.includes(enquirySearch) ||
+      e.city.toLowerCase().includes(enquirySearch.toLowerCase()),
   );
+
+  // ── Stats ───────────────────────────────────────────────────────────────────
+  const totalBookings = bookings?.length || 0;
+  const pendingBookings = (bookings || []).filter(
+    (b) => b.status === "pending",
+  ).length;
+  const confirmedBookings = (bookings || []).filter(
+    (b) => b.status === "confirmed",
+  ).length;
+  const totalDrivers = drivers?.length || 0;
+  const totalEnquiries = enquiries.length;
 
   // ── Action handlers ─────────────────────────────────────────────────────────
 
-  function confirmInquiry(id: number) {
-    const inq = inquiries.find((i) => i.id === id);
-    setInquiries((prev) =>
-      prev.map((i) => (i.id === id ? { ...i, status: "Confirmed" } : i)),
-    );
-    toast.success(`Booking confirmed for ${inq?.name}`);
+  async function confirmBooking(id: bigint) {
+    try {
+      await updateStatus.mutateAsync({
+        id,
+        status: "confirmed" as BookingStatus,
+      });
+      await refetchBookings();
+      toast.success(`Booking BK-${id} confirmed`);
+    } catch {
+      toast.error("Failed to confirm booking");
+    }
   }
 
-  function openFeedback(inq: Inquiry) {
-    setFeedbackTarget(inq);
+  function openCancelBooking(id: bigint) {
+    setCancelBookingId(id);
+    setCancelBookingOpen(true);
+  }
+
+  async function executeCancelBooking() {
+    if (cancelBookingId === null) return;
+    try {
+      await updateStatus.mutateAsync({
+        id: cancelBookingId,
+        status: "cancelled" as BookingStatus,
+      });
+      await refetchBookings();
+      toast.error(`Booking BK-${cancelBookingId} has been cancelled`);
+    } catch {
+      toast.error("Failed to cancel booking");
+    }
+    setCancelBookingOpen(false);
+    setCancelBookingId(null);
+  }
+
+  function openRemoveDriver(id: bigint, name: string) {
+    setRemoveDriverTarget({ id, name });
+    setRemoveDriverOpen(true);
+  }
+
+  async function executeRemoveDriver() {
+    if (!removeDriverTarget) return;
+    try {
+      await deleteDriverMutation.mutateAsync(removeDriverTarget.id);
+      await refetchDrivers();
+      toast.error(`${removeDriverTarget.name} has been removed`);
+    } catch {
+      toast.error("Failed to remove driver");
+    }
+    setRemoveDriverOpen(false);
+    setRemoveDriverTarget(null);
+  }
+
+  function confirmEnquiry(id: number) {
+    const updated = enquiries.map((e) =>
+      e.id === id ? { ...e, status: "Confirmed" as const } : e,
+    );
+    setEnquiries(updated);
+    localStorage.setItem("driveease_enquiries", JSON.stringify(updated));
+    toast.success("Enquiry confirmed");
+  }
+
+  function dismissEnquiry(id: number) {
+    const updated = enquiries.filter((e) => e.id !== id);
+    setEnquiries(updated);
+    localStorage.setItem("driveease_enquiries", JSON.stringify(updated));
+    toast.success("Enquiry dismissed");
+  }
+
+  function openFeedback(enq: LocalEnquiry) {
+    setFeedbackTarget(enq);
     setFeedbackText("");
     setFeedbackOpen(true);
   }
 
   function submitFeedback() {
+    if (!feedbackTarget) return;
+    const updated = enquiries.map((e) =>
+      e.id === feedbackTarget.id ? { ...e, feedback: feedbackText } : e,
+    );
+    setEnquiries(updated);
+    localStorage.setItem("driveease_enquiries", JSON.stringify(updated));
     setFeedbackOpen(false);
-    toast.success(`Feedback sent to ${feedbackTarget?.name}`);
+    toast.success(`Feedback saved for ${feedbackTarget.name}`);
     setFeedbackTarget(null);
     setFeedbackText("");
-  }
-
-  function confirmRide(id: string) {
-    setRides((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status: "Confirmed" } : r)),
-    );
-    toast.success(`Ride ${id} confirmed`);
-  }
-
-  function openCancelRide(ride: Ride) {
-    setCancelRideTarget(ride);
-    setCancelRideOpen(true);
-  }
-
-  function executeCancelRide() {
-    if (!cancelRideTarget) return;
-    setRides((prev) =>
-      prev.map((r) =>
-        r.id === cancelRideTarget.id ? { ...r, status: "Cancelled" } : r,
-      ),
-    );
-    toast.error(`Ride ${cancelRideTarget.id} has been cancelled`);
-    setCancelRideOpen(false);
-    setCancelRideTarget(null);
-  }
-
-  function openRemoveDriver(drv: Driver) {
-    setRemoveDriverTarget(drv);
-    setRemoveDriverOpen(true);
-  }
-
-  function executeRemoveDriver() {
-    if (!removeDriverTarget) return;
-    setDrivers((prev) => prev.filter((d) => d.id !== removeDriverTarget.id));
-    toast.error(`${removeDriverTarget.name} has been removed`);
-    setRemoveDriverOpen(false);
-    setRemoveDriverTarget(null);
   }
 
   return (
@@ -1001,7 +624,7 @@ export default function DashboardPage() {
               <span className="font-medium text-foreground">
                 {feedbackTarget?.name}
               </span>{" "}
-              — Booking {feedbackTarget?.bookingId}
+              — {feedbackTarget?.plan} plan
             </p>
             <Textarea
               placeholder="Type your feedback or response message here..."
@@ -1033,29 +656,28 @@ export default function DashboardPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Cancel Ride AlertDialog */}
-      <AlertDialog open={cancelRideOpen} onOpenChange={setCancelRideOpen}>
-        <AlertDialogContent data-ocid="dashboard.ride.cancel.dialog">
+      {/* Cancel Booking AlertDialog */}
+      <AlertDialog open={cancelBookingOpen} onOpenChange={setCancelBookingOpen}>
+        <AlertDialogContent data-ocid="dashboard.booking.cancel.dialog">
           <AlertDialogHeader>
             <AlertDialogTitle>
-              Cancel Ride {cancelRideTarget?.id}?
+              Cancel Booking BK-{String(cancelBookingId)}?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to cancel ride{" "}
-              <strong>{cancelRideTarget?.id}</strong> for customer{" "}
-              {cancelRideTarget?.customer}? This action cannot be undone.
+              Are you sure you want to cancel this booking? This action cannot
+              be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel data-ocid="dashboard.ride.cancel.cancel_button">
-              Keep Ride
+            <AlertDialogCancel data-ocid="dashboard.booking.cancel.cancel_button">
+              Keep Booking
             </AlertDialogCancel>
             <AlertDialogAction
-              onClick={executeCancelRide}
+              onClick={executeCancelBooking}
               className="bg-red-600 hover:bg-red-700 text-white"
-              data-ocid="dashboard.ride.cancel.confirm_button"
+              data-ocid="dashboard.booking.cancel.confirm_button"
             >
-              Yes, Cancel Ride
+              Yes, Cancel Booking
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1070,9 +692,8 @@ export default function DashboardPage() {
             </AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to remove driver{" "}
-              <strong>{removeDriverTarget?.name}</strong> from{" "}
-              {removeDriverTarget?.city}? They will be removed from the platform
-              immediately.
+              <strong>{removeDriverTarget?.name}</strong> from the platform?
+              This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -1102,10 +723,10 @@ export default function DashboardPage() {
             </div>
             <div>
               <h1 className="text-xl font-bold text-foreground">
-                Customer Inquiry Dashboard
+                Admin Dashboard
               </h1>
               <p className="text-xs text-muted-foreground">
-                Manage rides, customers & drivers from one place
+                Manage bookings, enquiries &amp; drivers in real-time
               </p>
             </div>
           </div>
@@ -1124,79 +745,84 @@ export default function DashboardPage() {
 
       <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
         {/* Stat Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <StatCard
             icon={<TrendingUp className="w-5 h-5" />}
-            label="Total Inquiries"
-            value={String(inquiries.length)}
+            label="Total Bookings"
+            value={String(totalBookings)}
             color="oklch(0.50 0.18 145)"
           />
           <StatCard
             icon={<Car className="w-5 h-5" />}
-            label="Active Rides"
-            value={String(
-              rides.filter(
-                (r) => r.status === "Confirmed" || r.status === "Pending",
-              ).length,
-            )}
+            label="Pending"
+            value={String(pendingBookings)}
+            color="oklch(0.65 0.18 80)"
+          />
+          <StatCard
+            icon={<TrendingUp className="w-5 h-5" />}
+            label="Confirmed"
+            value={String(confirmedBookings)}
             color="oklch(0.55 0.18 220)"
           />
           <StatCard
             icon={<Users className="w-5 h-5" />}
-            label="Total Customers"
-            value={String(inquiries.length)}
+            label="Total Drivers"
+            value={String(totalDrivers)}
             color="oklch(0.55 0.18 30)"
           />
           <StatCard
-            icon={<LayoutDashboard className="w-5 h-5" />}
-            label="Total Drivers"
-            value={String(drivers.length)}
+            icon={<MessageSquare className="w-5 h-5" />}
+            label="Enquiries"
+            value={String(totalEnquiries)}
             color="oklch(0.50 0.18 290)"
           />
         </div>
 
+        {/* Phone Lookup */}
+        <PhoneLookup bookings={bookings || []} />
+
         {/* Tabs */}
-        <Tabs defaultValue="inquiries">
+        <Tabs defaultValue="bookings">
           <TabsList className="bg-white border h-10 p-1 rounded-lg">
             <TabsTrigger
-              value="inquiries"
-              data-ocid="dashboard.inquiries.tab"
+              value="bookings"
+              data-ocid="dashboard.bookings.tab"
               className="data-[state=active]:text-white rounded-md text-sm"
             >
-              Customer Inquiries
+              Bookings
             </TabsTrigger>
             <TabsTrigger
-              value="rides"
-              data-ocid="dashboard.rides.tab"
+              value="enquiries"
+              data-ocid="dashboard.enquiries.tab"
               className="data-[state=active]:text-white rounded-md text-sm"
             >
-              Ride Details
+              Enquiries
             </TabsTrigger>
             <TabsTrigger
               value="drivers"
               data-ocid="dashboard.drivers.tab"
               className="data-[state=active]:text-white rounded-md text-sm"
             >
-              Driver Details
+              Drivers
             </TabsTrigger>
           </TabsList>
 
-          {/* ── Inquiries Tab ──────────────────────────────────── */}
-          <TabsContent value="inquiries" className="mt-4">
+          {/* ── Bookings Tab ──────────────────────────────────── */}
+          <TabsContent value="bookings" className="mt-4">
             <Card className="shadow-sm">
               <CardHeader className="pb-3 flex flex-row items-center justify-between gap-4">
                 <CardTitle className="text-base font-semibold">
-                  Customer Inquiries
+                  All Bookings ({totalBookings})
                 </CardTitle>
                 <div className="flex items-center gap-2 flex-1 max-w-sm">
                   <div className="relative flex-1">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
-                      placeholder="Search name or phone..."
-                      value={inquirySearch}
-                      onChange={(e) => setInquirySearch(e.target.value)}
+                      placeholder="Search name, phone or ID..."
+                      value={bookingSearch}
+                      onChange={(e) => setBookingSearch(e.target.value)}
                       className="pl-8 h-9 bg-white"
-                      data-ocid="dashboard.inquiry.search_input"
+                      data-ocid="dashboard.booking.search_input"
                     />
                   </div>
                   <Button
@@ -1207,29 +833,31 @@ export default function DashboardPage() {
                     onClick={() =>
                       downloadCSV(
                         [
-                          "#",
-                          "Name",
-                          "Phone",
                           "Booking ID",
+                          "Customer",
+                          "Phone",
                           "Pickup",
-                          "Drop-off",
+                          "Destination",
                           "Date",
+                          "Duration (hrs)",
+                          "Amount",
                           "Status",
                         ],
-                        filteredInquiries.map((i) => [
-                          String(i.id),
-                          i.name,
-                          i.phone,
-                          i.bookingId,
-                          i.pickup,
-                          i.dropoff,
-                          i.date,
-                          i.status,
+                        filteredBookings.map((b) => [
+                          `BK-${b.id}`,
+                          b.customerName,
+                          b.customerPhone,
+                          b.pickupAddress,
+                          b.destination,
+                          new Date(Number(b.date)).toLocaleDateString("en-IN"),
+                          String(b.durationHours),
+                          `${Number(b.totalPrice).toLocaleString("en-IN")}`,
+                          b.status,
                         ]),
-                        "inquiries.csv",
+                        "bookings.csv",
                       )
                     }
-                    data-ocid="dashboard.inquiry.export.button"
+                    data-ocid="dashboard.booking.export.button"
                   >
                     <Download className="w-3.5 h-3.5" />
                     Export CSV
@@ -1238,84 +866,94 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
-                  <Table data-ocid="dashboard.inquiry.table">
+                  <Table data-ocid="dashboard.booking.table">
                     <TableHeader>
                       <TableRow className="bg-gray-50">
-                        <TableHead className="w-10">#</TableHead>
-                        <TableHead>Customer Name</TableHead>
-                        <TableHead>Phone</TableHead>
                         <TableHead>Booking ID</TableHead>
+                        <TableHead>Customer</TableHead>
+                        <TableHead>Phone</TableHead>
                         <TableHead>Pickup</TableHead>
-                        <TableHead>Drop-off</TableHead>
+                        <TableHead>Destination</TableHead>
                         <TableHead>Date</TableHead>
+                        <TableHead>Duration</TableHead>
+                        <TableHead>Amount</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredInquiries.length === 0 ? (
+                      {bookingsLoading ? (
+                        <TableSkeleton cols={10} />
+                      ) : filteredBookings.length === 0 ? (
                         <TableRow>
                           <TableCell
-                            colSpan={9}
+                            colSpan={10}
                             className="text-center py-10 text-muted-foreground"
-                            data-ocid="dashboard.inquiry.empty_state"
+                            data-ocid="dashboard.booking.empty_state"
                           >
-                            No inquiries found.
+                            No bookings found. Bookings from customers will
+                            appear here.
                           </TableCell>
                         </TableRow>
                       ) : (
-                        filteredInquiries.map((inq, idx) => (
+                        filteredBookings.map((b, idx) => (
                           <TableRow
-                            key={inq.id}
-                            data-ocid={`dashboard.inquiry.row.${idx + 1}`}
+                            key={String(b.id)}
+                            data-ocid={`dashboard.booking.row.${idx + 1}`}
                           >
-                            <TableCell className="text-muted-foreground text-xs">
-                              {inq.id}
+                            <TableCell className="text-xs font-mono font-semibold text-green-700">
+                              BK-{String(b.id)}
                             </TableCell>
                             <TableCell className="font-medium">
-                              {inq.name}
+                              {b.customerName}
                             </TableCell>
                             <TableCell className="text-sm">
-                              {inq.phone}
-                            </TableCell>
-                            <TableCell className="text-xs font-mono text-muted-foreground">
-                              {inq.bookingId}
+                              {b.customerPhone}
                             </TableCell>
                             <TableCell className="text-sm max-w-[120px] truncate">
-                              {inq.pickup}
+                              {b.pickupAddress}
                             </TableCell>
                             <TableCell className="text-sm max-w-[120px] truncate">
-                              {inq.dropoff}
+                              {b.destination}
                             </TableCell>
                             <TableCell className="text-sm">
-                              {inq.date}
+                              {new Date(Number(b.date)).toLocaleDateString(
+                                "en-IN",
+                              )}
                             </TableCell>
-                            <TableCell>{statusBadge(inq.status)}</TableCell>
+                            <TableCell className="text-sm">
+                              {String(b.durationHours)} hrs
+                            </TableCell>
+                            <TableCell className="text-sm font-medium">
+                              ₹{Number(b.totalPrice).toLocaleString("en-IN")}
+                            </TableCell>
+                            <TableCell>{statusBadge(b.status)}</TableCell>
                             <TableCell>
                               <div className="flex items-center gap-1 flex-wrap">
-                                {inq.status !== "Confirmed" &&
-                                  inq.status !== "Completed" &&
-                                  inq.status !== "Cancelled" && (
-                                    <Button
-                                      size="sm"
-                                      className="h-7 px-2.5 text-xs text-white"
-                                      style={{ background: GREEN }}
-                                      onClick={() => confirmInquiry(inq.id)}
-                                      data-ocid={`dashboard.inquiry.confirm_button.${idx + 1}`}
-                                    >
-                                      Confirm
-                                    </Button>
-                                  )}
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="h-7 px-2.5 text-xs"
-                                  style={{ borderColor: GREEN, color: GREEN }}
-                                  onClick={() => openFeedback(inq)}
-                                  data-ocid={`dashboard.inquiry.send_feedback_button.${idx + 1}`}
-                                >
-                                  Send Feedback
-                                </Button>
+                                {b.status === "pending" && (
+                                  <Button
+                                    size="sm"
+                                    className="h-7 px-2.5 text-xs text-white"
+                                    style={{ background: GREEN }}
+                                    onClick={() => confirmBooking(b.id)}
+                                    disabled={updateStatus.isPending}
+                                    data-ocid={`dashboard.booking.confirm_button.${idx + 1}`}
+                                  >
+                                    Confirm
+                                  </Button>
+                                )}
+                                {(b.status === "pending" ||
+                                  b.status === "confirmed") && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-7 px-2.5 text-xs border-red-300 text-red-600 hover:bg-red-50"
+                                    onClick={() => openCancelBooking(b.id)}
+                                    data-ocid={`dashboard.booking.delete_button.${idx + 1}`}
+                                  >
+                                    Cancel
+                                  </Button>
+                                )}
                               </div>
                             </TableCell>
                           </TableRow>
@@ -1328,22 +966,22 @@ export default function DashboardPage() {
             </Card>
           </TabsContent>
 
-          {/* ── Rides Tab ────────────────────────────────────────── */}
-          <TabsContent value="rides" className="mt-4">
+          {/* ── Enquiries Tab ──────────────────────────────────── */}
+          <TabsContent value="enquiries" className="mt-4">
             <Card className="shadow-sm">
               <CardHeader className="pb-3 flex flex-row items-center justify-between gap-4">
                 <CardTitle className="text-base font-semibold">
-                  Ride Details
+                  Subscription Enquiries ({totalEnquiries})
                 </CardTitle>
                 <div className="flex items-center gap-2 flex-1 max-w-sm">
                   <div className="relative flex-1">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
-                      placeholder="Search ride ID or driver..."
-                      value={rideSearch}
-                      onChange={(e) => setRideSearch(e.target.value)}
+                      placeholder="Search name, phone or city..."
+                      value={enquirySearch}
+                      onChange={(e) => setEnquirySearch(e.target.value)}
                       className="pl-8 h-9 bg-white"
-                      data-ocid="dashboard.ride.search_input"
+                      data-ocid="dashboard.enquiry.search_input"
                     />
                   </div>
                   <Button
@@ -1354,31 +992,27 @@ export default function DashboardPage() {
                     onClick={() =>
                       downloadCSV(
                         [
-                          "Ride ID",
-                          "Driver",
-                          "Customer",
-                          "Pickup",
-                          "Drop-off",
-                          "Distance",
-                          "Duration",
-                          "Amount",
+                          "Name",
+                          "Phone",
+                          "City",
+                          "Plan",
+                          "Message",
+                          "Date",
                           "Status",
                         ],
-                        filteredRides.map((r) => [
-                          r.id,
-                          r.driver,
-                          r.customer,
-                          r.pickup,
-                          r.dropoff,
-                          r.distance,
-                          r.duration,
-                          String(r.amount),
-                          r.status,
+                        filteredEnquiries.map((e) => [
+                          e.name,
+                          e.phone,
+                          e.city,
+                          e.plan,
+                          e.message,
+                          e.date,
+                          e.status,
                         ]),
-                        "rides.csv",
+                        "enquiries.csv",
                       )
                     }
-                    data-ocid="dashboard.ride.export.button"
+                    data-ocid="dashboard.enquiry.export.button"
                   >
                     <Download className="w-3.5 h-3.5" />
                     Export CSV
@@ -1387,86 +1021,90 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
-                  <Table data-ocid="dashboard.ride.table">
+                  <Table data-ocid="dashboard.enquiry.table">
                     <TableHeader>
                       <TableRow className="bg-gray-50">
-                        <TableHead>Ride ID</TableHead>
-                        <TableHead>Driver</TableHead>
-                        <TableHead>Customer</TableHead>
-                        <TableHead>Pickup</TableHead>
-                        <TableHead>Drop-off</TableHead>
-                        <TableHead>Distance</TableHead>
-                        <TableHead>Amount (₹)</TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Phone</TableHead>
+                        <TableHead>City</TableHead>
+                        <TableHead>Plan</TableHead>
+                        <TableHead>Message</TableHead>
+                        <TableHead>Date</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredRides.length === 0 ? (
+                      {filteredEnquiries.length === 0 ? (
                         <TableRow>
                           <TableCell
-                            colSpan={9}
+                            colSpan={8}
                             className="text-center py-10 text-muted-foreground"
-                            data-ocid="dashboard.ride.empty_state"
+                            data-ocid="dashboard.enquiry.empty_state"
                           >
-                            No rides found.
+                            No enquiries yet. Subscription form submissions will
+                            appear here.
                           </TableCell>
                         </TableRow>
                       ) : (
-                        filteredRides.map((ride, idx) => (
+                        filteredEnquiries.map((enq, idx) => (
                           <TableRow
-                            key={ride.id}
-                            data-ocid={`dashboard.ride.row.${idx + 1}`}
+                            key={enq.id}
+                            data-ocid={`dashboard.enquiry.row.${idx + 1}`}
                           >
-                            <TableCell className="font-mono text-xs text-muted-foreground">
-                              {ride.id}
-                            </TableCell>
                             <TableCell className="font-medium">
-                              {ride.driver}
+                              {enq.name}
                             </TableCell>
                             <TableCell className="text-sm">
-                              {ride.customer}
-                            </TableCell>
-                            <TableCell className="text-sm max-w-[110px] truncate">
-                              {ride.pickup}
-                            </TableCell>
-                            <TableCell className="text-sm max-w-[110px] truncate">
-                              {ride.dropoff}
+                              {enq.phone}
                             </TableCell>
                             <TableCell className="text-sm">
-                              {ride.distance}
+                              {enq.city}
                             </TableCell>
-                            <TableCell className="font-semibold">
-                              ₹{ride.amount}
+                            <TableCell className="text-sm">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-200">
+                                {enq.plan}
+                              </span>
                             </TableCell>
-                            <TableCell>{statusBadge(ride.status)}</TableCell>
+                            <TableCell className="text-sm max-w-[150px] truncate">
+                              {enq.message || "—"}
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              {enq.date}
+                            </TableCell>
+                            <TableCell>{statusBadge(enq.status)}</TableCell>
                             <TableCell>
-                              <div className="flex items-center gap-1">
-                                {ride.status !== "Confirmed" &&
-                                  ride.status !== "Completed" &&
-                                  ride.status !== "Cancelled" && (
-                                    <Button
-                                      size="sm"
-                                      className="h-7 px-2.5 text-xs text-white"
-                                      style={{ background: GREEN }}
-                                      onClick={() => confirmRide(ride.id)}
-                                      data-ocid={`dashboard.ride.confirm_button.${idx + 1}`}
-                                    >
-                                      Confirm
-                                    </Button>
-                                  )}
-                                {ride.status !== "Cancelled" &&
-                                  ride.status !== "Completed" && (
-                                    <Button
-                                      size="sm"
-                                      variant="destructive"
-                                      className="h-7 px-2.5 text-xs"
-                                      onClick={() => openCancelRide(ride)}
-                                      data-ocid={`dashboard.ride.cancel_button.${idx + 1}`}
-                                    >
-                                      Cancel
-                                    </Button>
-                                  )}
+                              <div className="flex items-center gap-1 flex-wrap">
+                                {enq.status !== "Confirmed" && (
+                                  <Button
+                                    size="sm"
+                                    className="h-7 px-2.5 text-xs text-white"
+                                    style={{ background: GREEN }}
+                                    onClick={() => confirmEnquiry(enq.id)}
+                                    data-ocid={`dashboard.enquiry.confirm_button.${idx + 1}`}
+                                  >
+                                    Confirm
+                                  </Button>
+                                )}
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 px-2.5 text-xs"
+                                  style={{ borderColor: GREEN, color: GREEN }}
+                                  onClick={() => openFeedback(enq)}
+                                  data-ocid={`dashboard.enquiry.secondary_button.${idx + 1}`}
+                                >
+                                  Feedback
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 px-2.5 text-xs border-red-300 text-red-600 hover:bg-red-50"
+                                  onClick={() => dismissEnquiry(enq.id)}
+                                  data-ocid={`dashboard.enquiry.delete_button.${idx + 1}`}
+                                >
+                                  Dismiss
+                                </Button>
                               </div>
                             </TableCell>
                           </TableRow>
@@ -1484,13 +1122,13 @@ export default function DashboardPage() {
             <Card className="shadow-sm">
               <CardHeader className="pb-3 flex flex-row items-center justify-between gap-4">
                 <CardTitle className="text-base font-semibold">
-                  Driver Details
+                  Registered Drivers ({totalDrivers})
                 </CardTitle>
                 <div className="flex items-center gap-2 flex-1 max-w-sm">
                   <div className="relative flex-1">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
-                      placeholder="Search driver or city..."
+                      placeholder="Search driver name..."
                       value={driverSearch}
                       onChange={(e) => setDriverSearch(e.target.value)}
                       className="pl-8 h-9 bg-white"
@@ -1505,22 +1143,22 @@ export default function DashboardPage() {
                     onClick={() =>
                       downloadCSV(
                         [
+                          "ID",
                           "Name",
-                          "City",
-                          "State",
+                          "Experience (yrs)",
+                          "Languages",
                           "Rating",
-                          "Total Trips",
+                          "Price/Hour",
                           "Available",
-                          "Price/hr (₹)",
                         ],
                         filteredDrivers.map((d) => [
+                          String(d.id),
                           d.name,
-                          d.city,
-                          d.state,
+                          String(d.experienceYears),
+                          d.languages.join(", "),
                           String(d.rating),
-                          String(d.trips),
+                          `₹${Number(d.pricePerHour)}`,
                           d.available ? "Yes" : "No",
-                          String(d.price),
                         ]),
                         "drivers.csv",
                       )
@@ -1537,21 +1175,22 @@ export default function DashboardPage() {
                   <Table data-ocid="dashboard.driver.table">
                     <TableHeader>
                       <TableRow className="bg-gray-50">
-                        <TableHead>Driver Name</TableHead>
-                        <TableHead>City</TableHead>
-                        <TableHead>State</TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Experience</TableHead>
+                        <TableHead>Languages</TableHead>
                         <TableHead>Rating</TableHead>
-                        <TableHead>Trips</TableHead>
-                        <TableHead>Availability</TableHead>
-                        <TableHead>Price/hr (₹)</TableHead>
+                        <TableHead>Price/Hour</TableHead>
+                        <TableHead>Available</TableHead>
                         <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredDrivers.length === 0 ? (
+                      {driversLoading ? (
+                        <TableSkeleton cols={7} />
+                      ) : filteredDrivers.length === 0 ? (
                         <TableRow>
                           <TableCell
-                            colSpan={8}
+                            colSpan={7}
                             className="text-center py-10 text-muted-foreground"
                             data-ocid="dashboard.driver.empty_state"
                           >
@@ -1561,47 +1200,47 @@ export default function DashboardPage() {
                       ) : (
                         filteredDrivers.map((drv, idx) => (
                           <TableRow
-                            key={drv.id}
+                            key={String(drv.id)}
                             data-ocid={`dashboard.driver.row.${idx + 1}`}
                           >
                             <TableCell className="font-medium">
                               {drv.name}
                             </TableCell>
                             <TableCell className="text-sm">
-                              {drv.city}
+                              {String(drv.experienceYears)} yrs
                             </TableCell>
                             <TableCell className="text-sm">
-                              {drv.state}
-                            </TableCell>
-                            <TableCell>
-                              <span className="flex items-center gap-1 text-sm font-semibold">
-                                <span className="text-yellow-500">★</span>
-                                {drv.rating}
-                              </span>
+                              {drv.languages.join(", ")}
                             </TableCell>
                             <TableCell className="text-sm">
-                              {drv.trips}
+                              <span className="text-yellow-600 font-semibold">
+                                ★
+                              </span>{" "}
+                              {drv.rating.toFixed(1)}
+                            </TableCell>
+                            <TableCell className="text-sm font-medium">
+                              ₹{Number(drv.pricePerHour)}/hr
                             </TableCell>
                             <TableCell>
-                              <span
-                                className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border ${
-                                  drv.available
-                                    ? "bg-green-50 text-green-700 border-green-300"
-                                    : "bg-gray-50 text-gray-500 border-gray-300"
-                                }`}
-                              >
-                                {drv.available ? "Available" : "Unavailable"}
-                              </span>
-                            </TableCell>
-                            <TableCell className="font-semibold">
-                              ₹{drv.price}
+                              {drv.available ? (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-200">
+                                  Available
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-500 border border-gray-200">
+                                  Busy
+                                </span>
+                              )}
                             </TableCell>
                             <TableCell>
                               <Button
                                 size="sm"
-                                variant="destructive"
-                                className="h-7 px-2.5 text-xs"
-                                onClick={() => openRemoveDriver(drv)}
+                                variant="outline"
+                                className="h-7 px-2.5 text-xs border-red-300 text-red-600 hover:bg-red-50"
+                                onClick={() =>
+                                  openRemoveDriver(drv.id, drv.name)
+                                }
+                                disabled={deleteDriverMutation.isPending}
                                 data-ocid={`dashboard.driver.delete_button.${idx + 1}`}
                               >
                                 Remove
@@ -1618,6 +1257,14 @@ export default function DashboardPage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Footer */}
+      <footer className="mt-12 py-6 border-t bg-white text-center">
+        <p className="text-xs text-muted-foreground">
+          © {new Date().getFullYear()} DriveEase Admin Dashboard. All rights
+          reserved.
+        </p>
+      </footer>
     </div>
   );
 }

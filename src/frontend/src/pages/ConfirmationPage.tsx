@@ -11,6 +11,7 @@ import {
   MapPin,
   Navigation,
   Phone,
+  Shield,
   User,
 } from "lucide-react";
 import { motion } from "motion/react";
@@ -32,6 +33,9 @@ export default function ConfirmationPage() {
   const bookingIdBig = BigInt(bookingId);
   const { data: booking, isLoading } = useBooking(bookingIdBig);
   const { data: driver } = useDriver(booking ? booking.driverId : null);
+
+  // Read insurance opted from navigation state
+  const insuranceOpted = sessionStorage.getItem("driveease_insurance") === "1";
 
   if (isLoading) {
     return (
@@ -102,11 +106,25 @@ export default function ConfirmationPage() {
 
         <Card className="shadow-card">
           <CardContent className="p-6 space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-2">
               <h2 className="font-display font-bold text-lg">
                 Booking Details
               </h2>
-              <StatusBadge status={booking.status} />
+              <div className="flex items-center gap-2 flex-wrap">
+                {insuranceOpted && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-100 border border-green-300 text-green-800 text-xs font-semibold"
+                    data-ocid="confirmation.insurance.success_state"
+                  >
+                    <Shield className="w-3.5 h-3.5 text-green-700" />
+                    Ride Insurance: Active — ₹49
+                  </motion.div>
+                )}
+                <StatusBadge status={booking.status} />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -172,9 +190,16 @@ export default function ConfirmationPage() {
               className="rounded-xl p-4 flex items-center justify-between"
               style={{ background: "oklch(0.26 0.07 255)" }}
             >
-              <p className="text-white/80 text-sm">Total Price</p>
+              <div>
+                <p className="text-white/80 text-sm">Total Price</p>
+                {insuranceOpted && (
+                  <p className="text-white/60 text-xs mt-0.5 flex items-center gap-1">
+                    <Shield className="w-3 h-3" /> Incl. ₹49 ride insurance
+                  </p>
+                )}
+              </div>
               <p className="font-display font-bold text-2xl text-white">
-                ₹{Number(booking.totalPrice)}
+                ₹{Number(booking.totalPrice) + (insuranceOpted ? 49 : 0)}
               </p>
             </div>
           </CardContent>

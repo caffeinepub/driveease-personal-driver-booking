@@ -11,11 +11,18 @@ import { MapPin, Search, SlidersHorizontal } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import DriverCard from "../components/DriverCard";
-import { useAvailableDrivers, useSeedDrivers } from "../hooks/useQueries";
+import {
+  useAvailableDrivers,
+  useSeedDrivers,
+  useSeedEvenMoreDrivers,
+  useSeedMoreDrivers,
+} from "../hooks/useQueries";
 import { extractDriverLocation } from "../utils/driverLocation";
 
 const SKELETON_KEYS = ["sk1", "sk2", "sk3", "sk4", "sk5", "sk6"];
-const SEED_VERSION = "v7";
+const SEED_VERSION = "v8";
+const SEED_MORE_VERSION = "v9";
+const SEED_EVEN_MORE_VERSION = "v10";
 
 const ALL_INDIAN_STATES = [
   "Andhra Pradesh",
@@ -241,11 +248,15 @@ const CITIES_BY_STATE: Record<string, string[]> = {
 export default function DriversPage() {
   const { data: drivers, isLoading } = useAvailableDrivers();
   const seedMutation = useSeedDrivers();
+  const seedMoreMutation = useSeedMoreDrivers();
+  const seedEvenMoreMutation = useSeedEvenMoreDrivers();
   const [sort, setSort] = useState("default");
   const [search, setSearch] = useState("");
   const [stateFilter, setStateFilter] = useState("all");
   const [cityFilter, setCityFilter] = useState("all");
   const seeded = useRef(false);
+  const seededMore = useRef(false);
+  const seededEvenMore = useRef(false);
 
   useEffect(() => {
     if (seeded.current) return;
@@ -260,6 +271,37 @@ export default function DriversPage() {
       });
     }
   }, [seedMutation.mutate]);
+
+  useEffect(() => {
+    if (seededMore.current) return;
+    const alreadySeededMore = localStorage.getItem("driveease_seeded_more");
+    if (alreadySeededMore !== SEED_MORE_VERSION) {
+      seededMore.current = true;
+      seedMoreMutation.mutate(undefined, {
+        onSuccess: () => {
+          localStorage.setItem("driveease_seeded_more", SEED_MORE_VERSION);
+        },
+      });
+    }
+  }, [seedMoreMutation.mutate]);
+
+  useEffect(() => {
+    if (seededEvenMore.current) return;
+    const alreadySeededEvenMore = localStorage.getItem(
+      "driveease_seeded_even_more",
+    );
+    if (alreadySeededEvenMore !== SEED_EVEN_MORE_VERSION) {
+      seededEvenMore.current = true;
+      seedEvenMoreMutation.mutate(undefined, {
+        onSuccess: () => {
+          localStorage.setItem(
+            "driveease_seeded_even_more",
+            SEED_EVEN_MORE_VERSION,
+          );
+        },
+      });
+    }
+  }, [seedEvenMoreMutation.mutate]);
 
   const driversWithLocation = useMemo(() => {
     return (drivers ?? []).map((d) => ({

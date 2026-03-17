@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -12,14 +13,17 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import {
+  AlertTriangle,
   Calendar,
   CalendarCheck,
   Clock,
+  ExternalLink,
   Loader2,
   MapPin,
   Navigation,
   Phone,
   Route,
+  Shield,
   Star,
   Timer,
   User,
@@ -61,7 +65,6 @@ function diffDays(start: string, end: string): number {
   return Math.round((e - s) / (1000 * 60 * 60 * 24));
 }
 
-// Approximate city center coordinates for Indian cities/regions
 const CITY_COORDS: {
   keywords: string[];
   lat: number;
@@ -268,14 +271,13 @@ export default function BookingPage() {
     lat: number;
     lng: number;
   } | null>(null);
+  const [insuranceOpted, setInsuranceOpted] = useState(false);
 
   const update = (field: string, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
-  // Auto-calculate days when start/end date changes
   const numberOfDays = diffDays(form.startDate, form.endDate);
 
-  // When end date changes, update durationHours based on days (8 hrs/day)
   // biome-ignore lint/correctness/useExhaustiveDependencies: setForm is stable
   useEffect(() => {
     if (numberOfDays > 0) {
@@ -283,7 +285,6 @@ export default function BookingPage() {
     }
   }, [numberOfDays]);
 
-  // When start date set and no end date, set end date = start date (1 day)
   const handleStartDateChange = (val: string) => {
     update("startDate", val);
     if (!form.endDate || form.endDate < val) {
@@ -292,11 +293,12 @@ export default function BookingPage() {
   };
 
   const totalPricePerDay = driver ? Number(driver.pricePerHour) * 8 : 0;
-  const totalPrice = driver
+  const basePrice = driver
     ? numberOfDays > 0
       ? totalPricePerDay * numberOfDays
       : Number(driver.pricePerHour) * Number(form.durationHours)
     : 0;
+  const totalPrice = basePrice + (insuranceOpted ? 49 : 0);
 
   const estimatedDistance =
     pickupLatLng && dropLatLng
@@ -308,7 +310,6 @@ export default function BookingPage() {
         ).toFixed(1)
       : null;
 
-  // Compute nearby drivers when pickup is set
   const nearbyDrivers = useMemo(() => {
     if (!pickupLatLng || availableDrivers.length === 0) return [];
     const withDist = availableDrivers
@@ -366,6 +367,7 @@ export default function BookingPage() {
         durationHours: BigInt(form.durationHours),
         driverId: driver.id,
       });
+      sessionStorage.setItem("driveease_insurance", insuranceOpted ? "1" : "0");
       toast.success("Booking created successfully!");
       navigate({
         to: "/confirmation/$bookingId",
@@ -406,6 +408,57 @@ export default function BookingPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
+        {/* Emergency & Insurance Banner */}
+        <motion.div
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, delay: 0.1 }}
+          className="mb-6 rounded-xl border-2 border-green-300 bg-green-50 overflow-hidden"
+          data-ocid="booking.insurance.panel"
+        >
+          <div className="flex items-center gap-2.5 px-4 py-3 bg-green-700">
+            <Shield className="w-5 h-5 text-white shrink-0" />
+            <h3 className="font-display font-bold text-white text-base">
+              Ride Protection & Emergency Help
+            </h3>
+          </div>
+          <div className="px-4 py-4 flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex items-start gap-3 flex-1">
+              <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm text-gray-700 font-medium">
+                  In case of an accident, call <strong>112</strong> immediately
+                  or visit the insurance portal.
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Emergency Helpline (Ambulance / Police / Fire)
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              <a
+                href="tel:112"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                style={{ background: "oklch(0.50 0.18 145)" }}
+                data-ocid="booking.emergency.button"
+              >
+                <Phone className="w-4 h-4" />
+                Call 112
+              </a>
+              <a
+                href="https://www.policybazaar.com/motor-insurance/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold border-2 border-green-600 text-green-700 bg-white transition-colors hover:bg-green-50"
+                data-ocid="booking.insurance.link"
+              >
+                <ExternalLink className="w-4 h-4" />
+                View Insurance Portal
+              </a>
+            </div>
+          </div>
+        </motion.div>
+
         {/* Driver Summary */}
         <Card className="mb-8 shadow-card">
           <CardContent className="p-6">
@@ -760,6 +813,51 @@ export default function BookingPage() {
                 </div>
               </div>
 
+              {/* Insurance Opt-in */}
+              <div className="rounded-xl border-2 border-green-200 bg-green-50 p-4">
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    id="insurance"
+                    checked={insuranceOpted}
+                    onCheckedChange={(v) => setInsuranceOpted(Boolean(v))}
+                    className="mt-0.5 border-green-600 data-[state=checked]:bg-green-700 data-[state=checked]:border-green-700"
+                    data-ocid="booking.insurance.checkbox"
+                  />
+                  <div className="flex-1">
+                    <label
+                      htmlFor="insurance"
+                      className="font-semibold text-gray-800 flex items-center gap-2 cursor-pointer"
+                    >
+                      <Shield className="w-4 h-4 text-green-700" />
+                      Accidental Ride Insurance —{" "}
+                      <span className="text-green-700">₹49/ride</span>
+                    </label>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Coverage active for the duration of this ride only. Plan
+                      expires when ride is completed.
+                    </p>
+                    <a
+                      href="https://www.policybazaar.com/motor-insurance/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs text-green-700 font-medium mt-1.5 hover:underline"
+                    >
+                      <ExternalLink className="w-3 h-3" /> Learn more on
+                      Insurance Portal
+                    </a>
+                  </div>
+                  {insuranceOpted && (
+                    <motion.span
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="text-xs font-bold px-2.5 py-1 rounded-full bg-green-700 text-white shrink-0"
+                    >
+                      +₹49
+                    </motion.span>
+                  )}
+                </div>
+              </div>
+
               {/* Price Summary */}
               <div
                 className="rounded-xl p-4 space-y-2"
@@ -779,6 +877,11 @@ export default function BookingPage() {
                       <p className="text-sm text-muted-foreground">
                         ₹{Number(driver.pricePerHour)} × {form.durationHours}{" "}
                         {Number(form.durationHours) === 1 ? "hour" : "hours"}
+                      </p>
+                    )}
+                    {insuranceOpted && (
+                      <p className="text-sm text-green-700 font-medium flex items-center gap-1">
+                        <Shield className="w-3.5 h-3.5" /> Ride Insurance: +₹49
                       </p>
                     )}
                     <p className="font-display font-bold text-2xl text-foreground">
