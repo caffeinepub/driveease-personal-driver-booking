@@ -15,7 +15,7 @@ import { useAvailableDrivers, useSeedDrivers } from "../hooks/useQueries";
 import { extractDriverLocation } from "../utils/driverLocation";
 
 const SKELETON_KEYS = ["sk1", "sk2", "sk3", "sk4", "sk5", "sk6"];
-const SEED_VERSION = "v3";
+const SEED_VERSION = "v6";
 
 export default function DriversPage() {
   const { data: drivers, isLoading } = useAvailableDrivers();

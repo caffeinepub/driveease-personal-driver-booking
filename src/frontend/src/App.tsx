@@ -11,6 +11,7 @@ import Footer from "./components/Footer";
 import Navbar from "./components/Navbar";
 import BookingPage from "./pages/BookingPage";
 import ConfirmationPage from "./pages/ConfirmationPage";
+import DashboardPage from "./pages/DashboardPage";
 import DriversPage from "./pages/DriversPage";
 import LandingPage from "./pages/LandingPage";
 import LiveDriversPage from "./pages/LiveDriversPage";
@@ -74,6 +75,12 @@ const registerDriverRoute = createRoute({
   component: RegisterDriverPage,
 });
 
+const dashboardRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/dashboard",
+  component: DashboardPage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   driversRoute,
@@ -82,6 +89,7 @@ const routeTree = rootRoute.addChildren([
   confirmationRoute,
   trackRoute,
   registerDriverRoute,
+  dashboardRoute,
 ]);
 
 const router = createRouter({ routeTree });

@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import {
   Calendar,
+  CalendarCheck,
   Clock,
   Loader2,
   MapPin,
@@ -22,10 +23,9 @@ import {
   Star,
   Timer,
   User,
-  Users,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import LocationPicker from "../components/LocationPicker";
 import {
@@ -51,6 +51,14 @@ function haversineKm(
       Math.cos((lat2 * Math.PI) / 180) *
       Math.sin(dLon / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function diffDays(start: string, end: string): number {
+  if (!start || !end) return 0;
+  const s = new Date(start).getTime();
+  const e = new Date(end).getTime();
+  if (e <= s) return 0;
+  return Math.round((e - s) / (1000 * 60 * 60 * 24));
 }
 
 // Approximate city center coordinates for Indian cities/regions
@@ -239,14 +247,17 @@ export default function BookingPage() {
   const createBooking = useCreateBooking();
   const { data: availableDrivers = [] } = useAvailableDrivers();
 
+  const today = new Date().toISOString().split("T")[0];
+
   const [form, setForm] = useState({
     customerName: "",
     customerPhone: "",
     pickupAddress: "",
     destination: "",
-    date: "",
+    startDate: "",
+    endDate: "",
     time: "",
-    durationHours: "1",
+    durationHours: "8",
   });
 
   const [pickupLatLng, setPickupLatLng] = useState<{
@@ -261,8 +272,30 @@ export default function BookingPage() {
   const update = (field: string, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
+  // Auto-calculate days when start/end date changes
+  const numberOfDays = diffDays(form.startDate, form.endDate);
+
+  // When end date changes, update durationHours based on days (8 hrs/day)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: setForm is stable
+  useEffect(() => {
+    if (numberOfDays > 0) {
+      setForm((prev) => ({ ...prev, durationHours: String(numberOfDays * 8) }));
+    }
+  }, [numberOfDays]);
+
+  // When start date set and no end date, set end date = start date (1 day)
+  const handleStartDateChange = (val: string) => {
+    update("startDate", val);
+    if (!form.endDate || form.endDate < val) {
+      update("endDate", val);
+    }
+  };
+
+  const totalPricePerDay = driver ? Number(driver.pricePerHour) * 8 : 0;
   const totalPrice = driver
-    ? Number(driver.pricePerHour) * Number(form.durationHours)
+    ? numberOfDays > 0
+      ? totalPricePerDay * numberOfDays
+      : Number(driver.pricePerHour) * Number(form.durationHours)
     : 0;
 
   const estimatedDistance =
@@ -309,15 +342,20 @@ export default function BookingPage() {
       !form.customerPhone ||
       !form.pickupAddress ||
       !form.destination ||
-      !form.date ||
+      !form.startDate ||
       !form.time
     ) {
-      toast.error("Please fill in all fields");
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    if (form.endDate && form.endDate < form.startDate) {
+      toast.error("End date cannot be before start date");
       return;
     }
 
     try {
-      const dateMs = BigInt(Date.parse(form.date));
+      const dateMs = BigInt(Date.parse(form.startDate));
       const bookingId = await createBooking.mutateAsync({
         customerName: form.customerName,
         customerPhone: form.customerPhone,
@@ -411,6 +449,9 @@ export default function BookingPage() {
                   ₹{Number(driver.pricePerHour)}
                 </p>
                 <p className="text-sm text-muted-foreground">per hour</p>
+                <p className="text-sm font-semibold" style={{ color: GREEN }}>
+                  ₹{totalPricePerDay}/day
+                </p>
               </div>
             </div>
           </CardContent>
@@ -614,24 +655,71 @@ export default function BookingPage() {
                 </motion.div>
               )}
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="date" className="flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5" /> Date
-                  </Label>
-                  <Input
-                    id="date"
-                    type="date"
-                    value={form.date}
-                    onChange={(e) => update("date", e.target.value)}
-                    min={new Date().toISOString().split("T")[0]}
-                    data-ocid="booking.input"
-                    required
-                  />
+              {/* Booking Dates & Days */}
+              <div className="rounded-xl border border-green-100 bg-green-50/50 p-4 space-y-4">
+                <p className="text-sm font-semibold text-green-800 flex items-center gap-1.5">
+                  <CalendarCheck className="w-4 h-4" /> Booking Schedule
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="startDate"
+                      className="flex items-center gap-1.5"
+                    >
+                      <Calendar className="w-3.5 h-3.5" /> Booking Start Date
+                    </Label>
+                    <Input
+                      id="startDate"
+                      type="date"
+                      value={form.startDate}
+                      onChange={(e) => handleStartDateChange(e.target.value)}
+                      min={today}
+                      data-ocid="booking.start_date.input"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="endDate"
+                      className="flex items-center gap-1.5"
+                    >
+                      <CalendarCheck className="w-3.5 h-3.5" /> End Date
+                    </Label>
+                    <Input
+                      id="endDate"
+                      type="date"
+                      value={form.endDate}
+                      onChange={(e) => update("endDate", e.target.value)}
+                      min={form.startDate || today}
+                      data-ocid="booking.end_date.input"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-1.5">
+                      <Timer className="w-3.5 h-3.5" /> Number of Days
+                    </Label>
+                    <div
+                      className="flex items-center justify-center h-10 rounded-md border font-bold text-lg"
+                      style={{
+                        background: "white",
+                        borderColor: "oklch(0.88 0.05 145)",
+                        color: GREEN,
+                      }}
+                      data-ocid="booking.days_count.panel"
+                    >
+                      {numberOfDays > 0
+                        ? `${numberOfDays} day${numberOfDays > 1 ? "s" : ""}`
+                        : "—"}
+                    </div>
+                  </div>
                 </div>
+              </div>
+
+              {/* Time & Duration */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="time" className="flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5" /> Time
+                    <Clock className="w-3.5 h-3.5" /> Pickup Time
                   </Label>
                   <Input
                     id="time"
@@ -647,11 +735,16 @@ export default function BookingPage() {
                     htmlFor="duration"
                     className="flex items-center gap-1.5"
                   >
-                    <Timer className="w-3.5 h-3.5" /> Duration (hours)
+                    <Timer className="w-3.5 h-3.5" /> Hours per Day
                   </Label>
                   <Select
-                    value={form.durationHours}
-                    onValueChange={(v) => update("durationHours", v)}
+                    value={String(Math.min(Number(form.durationHours), 12))}
+                    onValueChange={(v) =>
+                      update(
+                        "durationHours",
+                        numberOfDays > 0 ? String(Number(v) * numberOfDays) : v,
+                      )
+                    }
                   >
                     <SelectTrigger id="duration" data-ocid="booking.select">
                       <SelectValue />
@@ -659,7 +752,7 @@ export default function BookingPage() {
                     <SelectContent>
                       {Array.from({ length: 12 }, (_, i) => i + 1).map((h) => (
                         <SelectItem key={h} value={h.toString()}>
-                          {h} {h === 1 ? "hour" : "hours"}
+                          {h} {h === 1 ? "hour" : "hours"}/day
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -677,16 +770,28 @@ export default function BookingPage() {
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">
-                      ₹{Number(driver.pricePerHour)} × {form.durationHours}{" "}
-                      {Number(form.durationHours) === 1 ? "hour" : "hours"}
-                    </p>
+                    {numberOfDays > 0 ? (
+                      <p className="text-sm text-muted-foreground">
+                        ₹{totalPricePerDay}/day × {numberOfDays} day
+                        {numberOfDays > 1 ? "s" : ""}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        ₹{Number(driver.pricePerHour)} × {form.durationHours}{" "}
+                        {Number(form.durationHours) === 1 ? "hour" : "hours"}
+                      </p>
+                    )}
                     <p className="font-display font-bold text-2xl text-foreground">
                       Total: ₹{totalPrice}
                     </p>
                     {estimatedDistance && (
                       <p className="text-xs text-muted-foreground mt-0.5">
                         Route distance: ~{estimatedDistance} km
+                      </p>
+                    )}
+                    {numberOfDays > 0 && form.startDate && form.endDate && (
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {form.startDate} to {form.endDate}
                       </p>
                     )}
                   </div>

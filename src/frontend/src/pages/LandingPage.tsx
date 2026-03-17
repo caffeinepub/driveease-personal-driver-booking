@@ -64,6 +64,13 @@ const features = [
   },
 ];
 
+const ambassadorStats = [
+  { label: "Trips Endorsed", value: "10,000+" },
+  { label: "Cities Covered", value: "100+" },
+  { label: "Customer Trust", value: "98%" },
+  { label: "Years with Us", value: "3+" },
+];
+
 export default function LandingPage() {
   const { data: drivers, isLoading } = useAvailableDrivers();
   const featuredDrivers = drivers?.slice(0, 3) ?? [];
@@ -75,12 +82,10 @@ export default function LandingPage() {
         className="relative overflow-hidden"
         style={{ background: "oklch(0.97 0.03 145)" }}
       >
-        {/* Green accent strip at top */}
         <div
           className="absolute top-0 left-0 right-0 h-1"
           style={{ background: GREEN }}
         />
-
         <div className="container mx-auto px-4 py-20 md:py-28 flex flex-col md:flex-row items-center gap-12 relative z-10">
           <motion.div
             className="flex-1 space-y-6"
@@ -116,8 +121,7 @@ export default function LandingPage() {
                   style={{ background: GREEN }}
                   data-ocid="hero.primary_button"
                 >
-                  Book a Driver Now
-                  <ChevronRight className="w-5 h-5 ml-1" />
+                  Book a Driver Now <ChevronRight className="w-5 h-5 ml-1" />
                 </Button>
               </Link>
               <Link to="/register-driver">
@@ -137,7 +141,6 @@ export default function LandingPage() {
               </Link>
             </div>
           </motion.div>
-
           <motion.div
             className="flex-1 flex justify-center"
             initial={{ opacity: 0, scale: 0.9 }}
@@ -149,10 +152,7 @@ export default function LandingPage() {
                 src="/assets/generated/hero-driver-india.dim_800x600.jpg"
                 alt="Professional Driver across India"
                 className="relative rounded-2xl w-full max-w-md object-cover"
-                style={{
-                  maxHeight: 420,
-                  border: `1px solid ${GREEN_BORDER}`,
-                }}
+                style={{ maxHeight: 420, border: `1px solid ${GREEN_BORDER}` }}
               />
               <div
                 className="absolute -bottom-4 -left-4 rounded-xl p-4 flex items-center gap-3 bg-white"
@@ -195,7 +195,6 @@ export default function LandingPage() {
               Three simple steps to get your driver
             </p>
           </motion.div>
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {steps.map((step, i) => (
               <motion.div
@@ -248,7 +247,6 @@ export default function LandingPage() {
               Everything you need for a stress-free ride
             </p>
           </motion.div>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.map((f, i) => (
               <motion.div
@@ -279,8 +277,165 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Brand Ambassador */}
+      <section
+        className="py-20 bg-background overflow-hidden"
+        data-ocid="ambassador.section"
+      >
+        <div className="container mx-auto px-4">
+          <motion.div
+            className="text-center mb-12"
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <div
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold mb-4"
+              style={{
+                background: "oklch(0.50 0.18 145 / 0.10)",
+                color: GREEN,
+                border: "1px solid oklch(0.50 0.18 145 / 0.25)",
+              }}
+            >
+              ⭐ Official Brand Ambassador
+            </div>
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground">
+              The Face of DriveEase
+            </h2>
+          </motion.div>
+
+          <div
+            className="max-w-4xl mx-auto rounded-3xl overflow-hidden"
+            style={{
+              border: `2px solid ${GREEN_BORDER}`,
+              background: "white",
+              boxShadow: "0 8px 48px oklch(0.50 0.18 145 / 0.10)",
+            }}
+          >
+            <div className="flex flex-col md:flex-row">
+              {/* Photo */}
+              <motion.div
+                className="md:w-2/5 relative"
+                initial={{ opacity: 0, x: -40 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.7 }}
+              >
+                <div
+                  className="h-80 md:h-full min-h-[340px] relative overflow-hidden"
+                  style={{ background: "oklch(0.94 0.06 145)" }}
+                >
+                  <img
+                    src="/assets/uploads/image-1.png"
+                    alt="Himanshu Singh – Brand Ambassador DriveEase"
+                    className="w-full h-full object-cover object-top"
+                  />
+                  <div
+                    className="absolute bottom-0 left-0 right-0 h-20"
+                    style={{
+                      background:
+                        "linear-gradient(to top, oklch(0.50 0.18 145 / 0.55), transparent)",
+                    }}
+                  />
+                  <div className="absolute bottom-4 left-4 right-4 flex items-center justify-center">
+                    <span
+                      className="text-xs font-bold tracking-widest uppercase text-white px-4 py-1.5 rounded-full"
+                      style={{ background: "oklch(0.50 0.18 145 / 0.85)" }}
+                    >
+                      Brand Ambassador
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Text */}
+              <motion.div
+                className="md:w-3/5 p-8 md:p-12 flex flex-col justify-center"
+                initial={{ opacity: 0, x: 40 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.7, delay: 0.15 }}
+              >
+                {/* Stars */}
+                <div className="flex items-center gap-1 mb-5">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <motion.div
+                      key={s}
+                      initial={{ opacity: 0, scale: 0 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.4, delay: 0.3 + s * 0.07 }}
+                    >
+                      <Star
+                        className="w-7 h-7"
+                        fill="oklch(0.78 0.18 75)"
+                        color="oklch(0.78 0.18 75)"
+                      />
+                    </motion.div>
+                  ))}
+                  <span
+                    className="ml-2 text-sm font-semibold"
+                    style={{ color: "oklch(0.55 0.14 75)" }}
+                  >
+                    5.0 / 5.0
+                  </span>
+                </div>
+
+                <h3 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-2 leading-tight">
+                  Himanshu Singh
+                </h3>
+
+                <div
+                  className="inline-flex items-center gap-2 w-fit px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase mb-5"
+                  style={{
+                    background: GREEN_ICON_BG,
+                    color: GREEN,
+                    border: `1px solid ${GREEN_BORDER}`,
+                  }}
+                >
+                  <span
+                    className="w-2 h-2 rounded-full inline-block"
+                    style={{ background: GREEN }}
+                  />
+                  Official Brand Ambassador · DriveEase
+                </div>
+
+                <p className="text-muted-foreground text-lg leading-relaxed mb-6">
+                  "Trusted face of DriveEase across India — bringing safety,
+                  professionalism, and reliability to every journey."
+                </p>
+
+                <div className="grid grid-cols-2 gap-4">
+                  {ambassadorStats.map((stat) => (
+                    <div
+                      key={stat.label}
+                      className="rounded-xl p-4 text-center"
+                      style={{
+                        background: GREEN_ICON_BG,
+                        border: `1px solid ${GREEN_BORDER}`,
+                      }}
+                    >
+                      <p
+                        className="text-xl font-bold font-display"
+                        style={{ color: GREEN }}
+                      >
+                        {stat.value}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {stat.label}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Featured Drivers */}
-      <section className="py-20 bg-background">
+      <section className="py-20" style={{ background: GREEN_TINT }}>
         <div className="container mx-auto px-4">
           <motion.div
             className="flex items-center justify-between mb-10"
@@ -348,7 +503,7 @@ export default function LandingPage() {
       </section>
 
       {/* Driver CTA */}
-      <section className="py-16" style={{ background: GREEN_TINT }}>
+      <section className="py-16 bg-background">
         <div className="container mx-auto px-4 text-center">
           <motion.div
             initial={{ opacity: 0, y: 24 }}

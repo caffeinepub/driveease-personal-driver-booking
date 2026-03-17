@@ -1,22 +1,30 @@
-# DriveEase
+# DriveEase Dashboard Actions
 
 ## Current State
-LocationPicker uses dark backgrounds for all elements. No save address feature.
+Dashboard has three tabs: Inquiries, Rides, Drivers. Data is static. Action buttons are non-functional.
 
 ## Requested Changes (Diff)
 
 ### Add
-- Save Address button when a location is selected
-- Label input to save address (Home/Work/Other)
-- Saved addresses as quick-select chips above search
-- LocalStorage persistence
+- Confirm Booking button on inquiry and ride rows
+- Cancel Ride button with confirm dialog
+- Remove Driver button with confirm dialog
+- Send Feedback modal on inquiry rows
+- Toast notifications for all actions
 
 ### Modify
-- All dark backgrounds in LocationPicker to white/light
-- Input, dropdown, address display, map placeholder to white theme
+- Move all data to React state for live mutations
+- Inquiry table: Confirm + Send Feedback buttons
+- Rides table: Confirm + Cancel buttons
+- Drivers table: Remove Driver button
 
 ### Remove
-- Dark oklch(0.10 0 0) backgrounds from LocationPicker
+- Non-functional View/Edit placeholder buttons
 
 ## Implementation Plan
-1. Update LocationPicker.tsx with white theme and save address feature
+1. useState for INQUIRIES, RIDES, DRIVERS
+2. Confirm action sets status to Confirmed
+3. Cancel ride with AlertDialog, sets Cancelled
+4. Remove driver with AlertDialog, removes from array
+5. Send Feedback Dialog with textarea + success toast
+6. Sonner toasts for all outcomes
