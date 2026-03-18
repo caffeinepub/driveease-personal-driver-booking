@@ -20,6 +20,7 @@ import {
   CreditCard,
   Heart,
   MapPin,
+  MessageCircle,
   RefreshCw,
   ShieldCheck,
   Star,
@@ -36,11 +37,18 @@ const GREEN_TINT = "oklch(0.97 0.02 145)";
 const GREEN_BORDER = "oklch(0.88 0.05 145)";
 const GREEN_ICON_BG = "oklch(0.95 0.05 145)";
 
-const trustBadges = [
+const _trustBadges = [
   { label: "Police Verified" },
   { label: "Grooming Trained" },
   { label: "Assigned Driver" },
   { label: "Family Safe" },
+];
+
+const heroTrustIndicators = [
+  { icon: "⭐", value: "4.8 Rating" },
+  { icon: "🚗", value: "5000+ Drivers" },
+  { icon: "👥", value: "10,000+ Customers" },
+  { icon: "✅", value: "Aadhaar Verified" },
 ];
 
 const differenceCards = [
@@ -161,6 +169,27 @@ interface EstimateResult {
   duration: string;
 }
 
+function WhatsAppButton() {
+  return (
+    <a
+      href="https://wa.me/919876543210"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="fixed bottom-6 right-6 z-50 flex items-center justify-center w-14 h-14 rounded-full text-white shadow-lg"
+      style={{ background: "#25D366" }}
+      aria-label="Chat on WhatsApp"
+      data-ocid="whatsapp.button"
+    >
+      {/* Pulse ring */}
+      <span
+        className="absolute inline-flex w-full h-full rounded-full opacity-60 animate-ping"
+        style={{ background: "#25D366" }}
+      />
+      <MessageCircle className="w-7 h-7 relative z-10" />
+    </a>
+  );
+}
+
 export default function LandingPage() {
   const { data: drivers, isLoading } = useAvailableDrivers();
   const featuredDrivers = drivers?.slice(0, 3) ?? [];
@@ -204,66 +233,115 @@ export default function LandingPage() {
 
   return (
     <div>
-      {/* Hero */}
+      {/* ═══ HERO ═══ */}
       <section
-        className="relative overflow-hidden"
-        style={{ background: "oklch(0.97 0.03 145)" }}
+        className="relative overflow-hidden min-h-[90vh] flex items-center"
+        style={{ background: "oklch(0.12 0.04 145)" }}
+        data-ocid="hero.section"
       >
+        {/* Full-width background image (mobile) */}
         <div
-          className="absolute top-0 left-0 right-0 h-1"
-          style={{ background: GREEN }}
+          className="absolute inset-0 md:hidden"
+          style={{
+            backgroundImage:
+              "url('/assets/generated/hero-driver.dim_1200x800.jpg')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            filter: "blur(4px)",
+          }}
         />
-        <div className="container mx-auto px-4 py-20 md:py-28 flex flex-col md:flex-row items-center gap-12 relative z-10">
-          <motion.div
-            className="flex-1 space-y-6"
-            initial={{ opacity: 0, y: 32 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
-          >
-            <div
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium"
-              style={{
-                background: "oklch(0.50 0.18 145 / 0.12)",
-                color: GREEN,
-                border: "1px solid oklch(0.50 0.18 145 / 0.25)",
-              }}
+        {/* Dark overlay on mobile */}
+        <div
+          className="absolute inset-0 md:hidden"
+          style={{ background: "rgba(0,0,0,0.55)" }}
+        />
+
+        {/* Desktop: right-side image panel */}
+        <div
+          className="absolute inset-y-0 right-0 w-1/2 hidden md:block"
+          style={{
+            backgroundImage:
+              "url('/assets/generated/hero-driver.dim_1200x800.jpg')",
+            backgroundSize: "cover",
+            backgroundPosition: "center top",
+          }}
+        >
+          {/* Gradient overlay on image */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(to right, oklch(0.12 0.04 145) 0%, oklch(0.12 0.04 145 / 0.5) 40%, transparent 100%)",
+            }}
+          />
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(to bottom, transparent 50%, oklch(0.12 0.04 145 / 0.4) 100%)",
+            }}
+          />
+        </div>
+
+        {/* Content */}
+        <div className="container mx-auto px-4 relative z-10 py-20 md:py-28">
+          <div className="max-w-2xl">
+            {/* Badge */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
             >
-              <Star className="w-3.5 h-3.5" fill="currentColor" />
-              India's First Personal Driver Network
-            </div>
-            <h1 className="font-display text-4xl md:text-6xl font-bold leading-tight text-foreground">
-              Not just a ride,
+              <div
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium mb-6"
+                style={{
+                  background: "oklch(0.50 0.18 145 / 0.25)",
+                  color: "oklch(0.88 0.12 145)",
+                  border: "1px solid oklch(0.50 0.18 145 / 0.40)",
+                }}
+              >
+                <Star className="w-3.5 h-3.5" fill="currentColor" />
+                India's First Personal Driver Network
+              </div>
+            </motion.div>
+
+            {/* Heading */}
+            <motion.h1
+              className="font-display text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-white mb-5"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+            >
+              Book a Professional Driver
               <br />
-              <span style={{ color: GREEN }}>a trusted driver.</span>
-            </h1>
-            <p className="text-lg max-w-md text-muted-foreground">
-              DriveEase is India's first Personal Driver Network. We don't
-              assign you a car — we assign you a relationship.
-            </p>
+              <span style={{ color: "oklch(0.75 0.16 145)" }}>
+                Anytime, Anywhere
+              </span>
+            </motion.h1>
 
-            {/* Trust Badge Strip */}
-            <div className="flex flex-wrap gap-2">
-              {trustBadges.map((badge) => (
-                <div
-                  key={badge.label}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold"
-                  style={{
-                    background: "oklch(0.50 0.18 145 / 0.10)",
-                    color: GREEN,
-                    border: "1px solid oklch(0.50 0.18 145 / 0.25)",
-                  }}
-                >
-                  <CheckCircle className="w-3 h-3" />
-                  {badge.label}
-                </div>
-              ))}
-            </div>
+            {/* Subheading */}
+            <motion.p
+              className="text-lg md:text-xl max-w-lg mb-8"
+              style={{ color: "oklch(0.85 0.04 145)" }}
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              Verified drivers across India. Safe, reliable, and affordable
+              rides at your fingertips.
+            </motion.p>
 
-            <div className="flex flex-wrap gap-4">
+            {/* CTA Buttons */}
+            <motion.div
+              className="flex flex-wrap gap-4 mb-10"
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >
               <Link to="/drivers">
                 <Button
                   size="lg"
-                  className="font-semibold text-base px-8 rounded-full text-white"
+                  className="font-bold text-base px-8 rounded-full text-white shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-xl"
                   style={{ background: GREEN }}
                   data-ocid="hero.primary_button"
                 >
@@ -274,68 +352,43 @@ export default function LandingPage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="font-semibold text-base px-8 rounded-full"
+                  className="font-semibold text-base px-8 rounded-full transition-all duration-200 hover:scale-105"
                   style={{
-                    borderColor: GREEN_BORDER,
-                    color: GREEN,
-                    background: "white",
+                    borderColor: "oklch(0.60 0.15 145)",
+                    color: "oklch(0.88 0.12 145)",
+                    background: "rgba(255,255,255,0.08)",
                   }}
                   data-ocid="hero.plans_button"
                 >
                   View Plans →
                 </Button>
               </Link>
-              <Link to="/register-driver">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="font-semibold text-base px-8 rounded-full"
-                  style={{
-                    borderColor: GREEN_BORDER,
-                    color: "oklch(0.20 0 0)",
-                    background: "white",
-                  }}
-                  data-ocid="hero.secondary_button"
-                >
-                  Drive With Us →
-                </Button>
-              </Link>
-            </div>
-          </motion.div>
-          <motion.div
-            className="flex-1 flex justify-center"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-          >
-            <div className="relative">
-              <img
-                src="/assets/generated/hero-driver-india.dim_800x600.jpg"
-                alt="Professional Driver across India"
-                className="relative rounded-2xl w-full max-w-md object-cover"
-                style={{ maxHeight: 420, border: `1px solid ${GREEN_BORDER}` }}
-              />
-              <div
-                className="absolute -bottom-4 -left-4 rounded-xl p-4 flex items-center gap-3 bg-white"
-                style={{ border: `1px solid ${GREEN_BORDER}` }}
-              >
+            </motion.div>
+
+            {/* Trust Indicators */}
+            <motion.div
+              className="flex flex-wrap gap-3"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.45 }}
+            >
+              {heroTrustIndicators.map((item) => (
                 <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center"
-                  style={{ background: GREEN }}
+                  key={item.value}
+                  className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold"
+                  style={{
+                    background: "rgba(255,255,255,0.12)",
+                    border: "1px solid rgba(255,255,255,0.25)",
+                    color: "white",
+                    backdropFilter: "blur(8px)",
+                  }}
                 >
-                  <ShieldCheck className="w-5 h-5 text-white" />
+                  <span>{item.icon}</span>
+                  <span>{item.value}</span>
                 </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">
-                    Assigned & Verified
-                  </p>
-                  <p className="text-sm font-semibold text-foreground">
-                    Your Personal Driver
-                  </p>
-                </div>
-              </div>
-            </div>
-          </motion.div>
+              ))}
+            </motion.div>
+          </div>
         </div>
       </section>
 
@@ -415,7 +468,6 @@ export default function LandingPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.7 }}
           >
-            {/* Header */}
             <div
               className="px-6 py-4 flex items-center gap-4"
               style={{ background: GREEN }}
@@ -521,7 +573,6 @@ export default function LandingPage() {
               ))}
             </div>
 
-            {/* Training Badges */}
             <div className="px-6 pb-6 flex flex-wrap gap-2">
               {["Etiquette Pro", "Senior Care", "Family Driver"].map(
                 (badge) => (
@@ -619,7 +670,6 @@ export default function LandingPage() {
       <section className="py-20" style={{ background: GREEN_TINT }}>
         <div className="container mx-auto px-4">
           <div className="max-w-5xl mx-auto flex flex-col lg:flex-row gap-12 items-center">
-            {/* Left: Family Dashboard Mockup */}
             <motion.div
               className="flex-1"
               initial={{ opacity: 0, x: -32 }}
@@ -725,7 +775,6 @@ export default function LandingPage() {
               </div>
             </motion.div>
 
-            {/* Right: Feature List */}
             <motion.div
               className="flex-1 space-y-6"
               initial={{ opacity: 0, x: 32 }}
@@ -882,7 +931,6 @@ export default function LandingPage() {
           </motion.div>
 
           <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-            {/* Form card */}
             <motion.div
               className="rounded-2xl p-8"
               style={{
@@ -896,7 +944,6 @@ export default function LandingPage() {
               transition={{ duration: 0.6 }}
             >
               <div className="space-y-5">
-                {/* From */}
                 <div className="space-y-1.5">
                   <Label
                     htmlFor="pickup"
@@ -913,7 +960,6 @@ export default function LandingPage() {
                   />
                 </div>
 
-                {/* Date & Time row */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label
@@ -947,7 +993,6 @@ export default function LandingPage() {
                   </div>
                 </div>
 
-                {/* Duration */}
                 <div className="space-y-1.5">
                   <Label className="text-sm font-semibold text-foreground">
                     Duration
@@ -966,7 +1011,6 @@ export default function LandingPage() {
                   </Select>
                 </div>
 
-                {/* Car Type */}
                 <div className="space-y-1.5">
                   <Label className="text-sm font-semibold text-foreground">
                     Car Type
@@ -985,7 +1029,6 @@ export default function LandingPage() {
                   </Select>
                 </div>
 
-                {/* City */}
                 <div className="space-y-1.5">
                   <Label className="text-sm font-semibold text-foreground">
                     City
@@ -1043,7 +1086,6 @@ export default function LandingPage() {
               </div>
             </motion.div>
 
-            {/* Result / Illustration side */}
             <div className="flex flex-col gap-6">
               {estimate ? (
                 <motion.div
@@ -1461,6 +1503,9 @@ export default function LandingPage() {
           </motion.div>
         </div>
       </section>
+
+      {/* Floating WhatsApp Button */}
+      <WhatsAppButton />
     </div>
   );
 }

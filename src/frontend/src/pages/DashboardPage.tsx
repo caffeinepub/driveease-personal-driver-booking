@@ -19,6 +19,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -482,6 +489,12 @@ export default function DashboardPage() {
   const [bookingSearch, setBookingSearch] = useState("");
   const [driverSearch, setDriverSearch] = useState("");
   const [enquirySearch, setEnquirySearch] = useState("");
+  const [regSearch, setRegSearch] = useState("");
+  const [regStatusFilter, setRegStatusFilter] = useState("all");
+  const [selectedRegistration, setSelectedRegistration] = useState<
+    (typeof registrations extends (infer T)[] | undefined ? T : never) | null
+  >(null);
+  const [regDetailsOpen, setRegDetailsOpen] = useState(false);
 
   // Feedback dialog state
   const [feedbackOpen, setFeedbackOpen] = useState(false);
@@ -833,7 +846,7 @@ export default function DashboardPage() {
               data-ocid="dashboard.approvals.tab"
               className="data-[state=active]:text-white rounded-md text-sm"
             >
-              Driver Approvals
+              Registrations
               {pendingDriversCount > 0 && (
                 <span className="ml-1 bg-orange-500 text-white text-xs rounded-full px-1.5 py-0.5">
                   {pendingDriversCount}
@@ -1293,150 +1306,379 @@ export default function DashboardPage() {
 
           {/* ── Approvals Tab ──────────────────────────────────── */}
           <TabsContent value="approvals" className="mt-4">
+            {/* Registration Detail Dialog */}
+            <Dialog open={regDetailsOpen} onOpenChange={setRegDetailsOpen}>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-3 flex-wrap">
+                    <span>{selectedRegistration?.name}</span>
+                    <span className="text-xs font-mono bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
+                      {selectedRegistration?.applicationId}
+                    </span>
+                    {selectedRegistration?.status === "pending" && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-50 text-yellow-700 border border-yellow-200">
+                        Pending
+                      </span>
+                    )}
+                    {selectedRegistration?.status === "approved" && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-200">
+                        Approved
+                      </span>
+                    )}
+                    {selectedRegistration?.status === "rejected" && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
+                        Rejected
+                      </span>
+                    )}
+                  </DialogTitle>
+                </DialogHeader>
+                {selectedRegistration && (
+                  <div className="space-y-4 py-2">
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-0.5">
+                          Application ID
+                        </p>
+                        <p className="text-sm font-mono">
+                          {selectedRegistration.applicationId}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-0.5">
+                          Registration Date
+                        </p>
+                        <p className="text-sm">
+                          {new Date(
+                            Number(selectedRegistration.createdAt) / 1_000_000,
+                          ).toLocaleDateString("en-IN", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-0.5">
+                          Full Name
+                        </p>
+                        <p className="text-sm font-medium">
+                          {selectedRegistration.name}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-0.5">
+                          Phone Number
+                        </p>
+                        <p className="text-sm">{selectedRegistration.phone}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-0.5">
+                          Email Address
+                        </p>
+                        <p className="text-sm">
+                          {selectedRegistration.email || "—"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-0.5">
+                          City
+                        </p>
+                        <p className="text-sm">{selectedRegistration.city}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-0.5">
+                          State
+                        </p>
+                        <p className="text-sm">{selectedRegistration.state}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-0.5">
+                          Experience
+                        </p>
+                        <p className="text-sm">
+                          {selectedRegistration.experience}
+                        </p>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="w-2 h-2 rounded-full bg-green-400 inline-block mt-1.5 shrink-0" />
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-0.5">
+                            Driving License No.
+                          </p>
+                          <p className="text-sm font-mono">
+                            {selectedRegistration.licenseNumber}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="w-2 h-2 rounded-full bg-blue-400 inline-block mt-1.5 shrink-0" />
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-0.5">
+                            Aadhaar Number
+                          </p>
+                          <p className="text-sm font-mono">
+                            {selectedRegistration.aadhaarNumber}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    {selectedRegistration.about && (
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-0.5">
+                          About / Bio
+                        </p>
+                        <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap bg-gray-50 rounded-md p-3 border">
+                          {selectedRegistration.about}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {selectedRegistration?.status === "pending" && (
+                  <DialogFooter className="gap-2">
+                    <Button
+                      variant="outline"
+                      className="border-red-300 text-red-600 hover:bg-red-50"
+                      disabled={rejectRegistration.isPending}
+                      onClick={async () => {
+                        await rejectRegistration.mutateAsync(
+                          selectedRegistration.id,
+                        );
+                        toast.success(`${selectedRegistration.name} rejected.`);
+                        setRegDetailsOpen(false);
+                      }}
+                      data-ocid="reg.detail.delete_button"
+                    >
+                      Reject
+                    </Button>
+                    <Button
+                      className="text-white"
+                      style={{ background: GREEN }}
+                      disabled={approveRegistration.isPending}
+                      onClick={async () => {
+                        await approveRegistration.mutateAsync(
+                          selectedRegistration.id,
+                        );
+                        toast.success(
+                          `${selectedRegistration.name} approved. SMS sent.`,
+                        );
+                        setRegDetailsOpen(false);
+                      }}
+                      data-ocid="reg.detail.confirm_button"
+                    >
+                      Approve Driver
+                    </Button>
+                  </DialogFooter>
+                )}
+              </DialogContent>
+            </Dialog>
+
             <Card className="shadow-sm">
-              <CardHeader className="pb-3 flex flex-row items-center justify-between gap-4">
-                <CardTitle className="text-base font-semibold">
-                  Driver Approval Requests
-                </CardTitle>
-                <span className="text-sm text-muted-foreground">
-                  {pendingDriversCount} pending
-                </span>
+              <CardHeader className="pb-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <CardTitle className="text-base font-semibold">
+                    Driver Registration Requests
+                    <span className="ml-2 text-sm font-normal text-muted-foreground">
+                      ({pendingDriversCount} pending)
+                    </span>
+                  </CardTitle>
+                  <div className="flex items-center gap-2 flex-1 sm:max-w-sm">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search by name, phone, city..."
+                        value={regSearch}
+                        onChange={(e) => setRegSearch(e.target.value)}
+                        className="pl-8 h-9 bg-white"
+                        data-ocid="reg.search_input"
+                      />
+                    </div>
+                    <Select
+                      value={regStatusFilter}
+                      onValueChange={setRegStatusFilter}
+                    >
+                      <SelectTrigger
+                        className="h-9 w-36 bg-white"
+                        data-ocid="reg.status.select"
+                      >
+                        <SelectValue placeholder="All Statuses" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Statuses</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="approved">Approved</SelectItem>
+                        <SelectItem value="rejected">Rejected</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className="p-0">
                 {registrationsLoading ? (
                   <Table>
                     <TableBody>
-                      <TableSkeleton cols={6} />
+                      <TableSkeleton cols={7} />
                     </TableBody>
                   </Table>
-                ) : (registrations || []).length === 0 ? (
-                  <div
-                    className="py-12 text-center text-muted-foreground"
-                    data-ocid="approvals.empty_state"
-                  >
-                    No driver registration requests yet
-                  </div>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <Table data-ocid="approvals.table">
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Mobile</TableHead>
-                          <TableHead>City / State</TableHead>
-                          <TableHead>Documents</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {[...(registrations || [])]
-                          .sort((a, b) => {
-                            if (
-                              a.status === "pending" &&
-                              b.status !== "pending"
-                            )
-                              return -1;
-                            if (
-                              a.status !== "pending" &&
-                              b.status === "pending"
-                            )
-                              return 1;
-                            return 0;
-                          })
-                          .map((reg, idx) => (
-                            <TableRow
-                              key={reg.id.toString()}
-                              data-ocid={`approvals.item.${idx + 1}`}
-                            >
-                              <TableCell>
-                                <div className="font-medium">{reg.name}</div>
-                                <div className="text-xs text-muted-foreground font-mono">
-                                  {reg.applicationId}
-                                </div>
-                              </TableCell>
-                              <TableCell>{reg.phone}</TableCell>
-                              <TableCell>
-                                {reg.city}, {reg.state}
-                              </TableCell>
-                              <TableCell>
-                                <div className="text-xs space-y-1">
-                                  <div className="flex items-center gap-1">
-                                    <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
-                                    DL: {reg.licenseNumber}
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <span className="w-2 h-2 rounded-full bg-blue-400 inline-block" />
-                                    Aadhaar: {reg.aadhaarNumber}
-                                  </div>
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                {reg.status === "pending" && (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-50 text-yellow-700 border border-yellow-300">
-                                    <Clock className="w-3 h-3 mr-1" /> Pending
-                                  </span>
-                                )}
-                                {reg.status === "approved" && (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-300">
-                                    <CheckCircle2 className="w-3 h-3 mr-1" />{" "}
-                                    Approved
-                                  </span>
-                                )}
-                                {reg.status === "rejected" && (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-300">
-                                    <XCircle className="w-3 h-3 mr-1" />{" "}
-                                    Rejected
-                                  </span>
-                                )}
-                              </TableCell>
-                              <TableCell>
-                                {reg.status === "pending" && (
-                                  <div className="flex gap-2">
-                                    <Button
-                                      size="sm"
-                                      className="bg-green-600 hover:bg-green-700 text-white text-xs h-7 px-3"
-                                      disabled={approveRegistration.isPending}
-                                      onClick={async () => {
-                                        await approveRegistration.mutateAsync(
-                                          reg.id,
-                                        );
-                                        toast.success(
-                                          `${reg.name} approved. SMS sent.`,
-                                        );
-                                      }}
-                                      data-ocid={`approvals.confirm_button.${idx + 1}`}
-                                    >
-                                      Approve
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="destructive"
-                                      className="text-xs h-7 px-3"
-                                      disabled={rejectRegistration.isPending}
-                                      onClick={async () => {
-                                        await rejectRegistration.mutateAsync(
-                                          reg.id,
-                                        );
-                                        toast.success(`${reg.name} rejected.`);
-                                      }}
-                                      data-ocid={`approvals.delete_button.${idx + 1}`}
-                                    >
-                                      Reject
-                                    </Button>
-                                  </div>
-                                )}
-                                {reg.status !== "pending" && (
-                                  <span className="text-xs text-muted-foreground">
-                                    No action needed
-                                  </span>
-                                )}
-                              </TableCell>
+                  (() => {
+                    const filtered = [...(registrations || [])]
+                      .sort((a, b) => {
+                        if (a.status === "pending" && b.status !== "pending")
+                          return -1;
+                        if (a.status !== "pending" && b.status === "pending")
+                          return 1;
+                        return 0;
+                      })
+                      .filter((r) => {
+                        const q = regSearch.toLowerCase();
+                        const matchesSearch =
+                          !q ||
+                          r.name.toLowerCase().includes(q) ||
+                          r.phone.includes(q) ||
+                          r.city.toLowerCase().includes(q);
+                        const matchesStatus =
+                          regStatusFilter === "all" ||
+                          r.status === regStatusFilter;
+                        return matchesSearch && matchesStatus;
+                      });
+                    return filtered.length === 0 ? (
+                      <div
+                        className="py-12 text-center text-muted-foreground"
+                        data-ocid="approvals.empty_state"
+                      >
+                        {(registrations || []).length === 0
+                          ? "No driver registration requests yet"
+                          : "No results match your search"}
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <Table data-ocid="approvals.table">
+                          <TableHeader>
+                            <TableRow className="bg-gray-50">
+                              <TableHead>Name</TableHead>
+                              <TableHead>Mobile</TableHead>
+                              <TableHead>City / State</TableHead>
+                              <TableHead>Documents</TableHead>
+                              <TableHead>Status</TableHead>
+                              <TableHead>Actions</TableHead>
                             </TableRow>
-                          ))}
-                      </TableBody>
-                    </Table>
-                  </div>
+                          </TableHeader>
+                          <TableBody>
+                            {filtered.map((reg, idx) => (
+                              <TableRow
+                                key={reg.id.toString()}
+                                data-ocid={`approvals.item.${idx + 1}`}
+                              >
+                                <TableCell>
+                                  <div className="font-medium">{reg.name}</div>
+                                  <div className="text-xs text-muted-foreground font-mono">
+                                    {reg.applicationId}
+                                  </div>
+                                </TableCell>
+                                <TableCell>{reg.phone}</TableCell>
+                                <TableCell>
+                                  {reg.city}, {reg.state}
+                                </TableCell>
+                                <TableCell>
+                                  <div className="text-xs space-y-1">
+                                    <div className="flex items-center gap-1">
+                                      <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
+                                      DL: {reg.licenseNumber}
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <span className="w-2 h-2 rounded-full bg-blue-400 inline-block" />
+                                      Aadhaar: {reg.aadhaarNumber}
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  {reg.status === "pending" && (
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-50 text-yellow-700 border border-yellow-200">
+                                      Pending
+                                    </span>
+                                  )}
+                                  {reg.status === "approved" && (
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-200">
+                                      Approved
+                                    </span>
+                                  )}
+                                  {reg.status === "rejected" && (
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
+                                      Rejected
+                                    </span>
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex gap-1 flex-wrap items-center">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="h-7 px-2 text-xs gap-1"
+                                      onClick={() => {
+                                        setSelectedRegistration(reg);
+                                        setRegDetailsOpen(true);
+                                      }}
+                                      data-ocid={`approvals.edit_button.${idx + 1}`}
+                                    >
+                                      <Eye className="w-3.5 h-3.5" />
+                                      View
+                                    </Button>
+                                    {reg.status === "pending" && (
+                                      <>
+                                        <Button
+                                          size="sm"
+                                          className="bg-green-600 hover:bg-green-700 text-white text-xs h-7 px-3"
+                                          disabled={
+                                            approveRegistration.isPending
+                                          }
+                                          onClick={async () => {
+                                            await approveRegistration.mutateAsync(
+                                              reg.id,
+                                            );
+                                            toast.success(
+                                              `${reg.name} approved. SMS sent.`,
+                                            );
+                                          }}
+                                          data-ocid={`approvals.confirm_button.${idx + 1}`}
+                                        >
+                                          Approve
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          variant="destructive"
+                                          className="text-xs h-7 px-3"
+                                          disabled={
+                                            rejectRegistration.isPending
+                                          }
+                                          onClick={async () => {
+                                            await rejectRegistration.mutateAsync(
+                                              reg.id,
+                                            );
+                                            toast.success(
+                                              `${reg.name} rejected.`,
+                                            );
+                                          }}
+                                          data-ocid={`approvals.delete_button.${idx + 1}`}
+                                        >
+                                          Reject
+                                        </Button>
+                                      </>
+                                    )}
+                                    {reg.status !== "pending" && (
+                                      <span className="text-xs text-muted-foreground">
+                                        No action needed
+                                      </span>
+                                    )}
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    );
+                  })()
                 )}
               </CardContent>
             </Card>
